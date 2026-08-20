@@ -1,0 +1,21 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+@import "nativewind/theme";
+
+@theme {
+  /* ─── Warna Saparu ─────────────────────────────────────────── */
+  --color-saparu-bg: #9BCEC1;
+  --color-saparu-card: #FDE3E7;
+  --color-saparu-pink: #D4819A;
+  --color-saparu-rose: #C1607A;
+  --color-saparu-deep: #D4608A;
+  --color-saparu-placeholder: #C8A0AE;
+  --color-saparu-text: #7D3E50;
+  --color-saparu-muted: #C07088;
+  --color-saparu-btn: #F0A080;
+
+  /* ─── Font Saparu ──────────────────────────────────────────── */
+  --font-fuzzy: FuzzyBubbles_400Regular;
+  --font-fuzzy-bold: FuzzyBubbles_700Bold;
+}
