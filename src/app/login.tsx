@@ -103,25 +103,28 @@ export default function LoginScreen() {
             elevation: 1,
           }}>
 
-          {/* Title */}
-          <Text
-            className="text-saparu-btn text-center mb-[22px]"
-            style={{
-              fontFamily: 'FuzzyBubbles_400Regular',
-              fontSize: 26,
-              fontWeight: '900',
-            }}>
-            Log in on{' '}
-            <Text
-              className="text-saparu-rose"
-              style={{ fontFamily: 'FuzzyBubbles_700Bold' }}>
-              Saparu
-            </Text>
-          </Text>
+        {/* Title */}
+        <Text
+        className="text-[32px] font-bold"
+        style={{
+          color: "#FFD2C7",
+          textShadowColor: "#E89E91",
+          textShadowOffset: { width: 2.5, height: 1 },
+          textShadowRadius: 0,
+          fontFamily: 'FuzzyBubbles_700Bold'
+        }}
+      >
+      Log in on
+      <Text
+        className="text-saparu-rose px-3"
+        style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#9BCEC1' }}>
+        Saparu
+      </Text>
+      </Text>
 
           {/* Email Input */}
           <View
-            className="flex-row items-center bg-white w-full mb-3"
+            className="flex-row items-center bg-white w-full mb-3 mt-3"
             style={{
               borderRadius: 44,
               paddingHorizontal: 16,
@@ -164,9 +167,6 @@ export default function LoginScreen() {
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
             />
-            <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
-              <EyeIcon />
-            </Pressable>
           </View>
 
           {/* Forgot Password */}
