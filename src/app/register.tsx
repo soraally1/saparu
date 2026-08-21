@@ -83,7 +83,7 @@ export default function RegisterScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
 
-        <View className="w-full max-w-[380px] items-center">
+        <View className="w-full max-w-[400px] items-center">
 
           {/* Mascot — peeking from top of card */}
           <View className="items-center -mb-8 z-10">
@@ -101,25 +101,38 @@ export default function RegisterScreen() {
               borderTopLeftRadius: 50,
               borderTopRightRadius: 50,
               paddingHorizontal: 28,
-              paddingTop: 44,
+              paddingTop: 28,
               paddingBottom: 28,
               elevation: 8,
             }}>
 
-            <Text
-              className="text-saparu-deep text-center mb-[2px]"
-              style={{ fontFamily: 'FuzzyBubbles_700Bold', fontSize: 22 }}>
-              Halo Bunda
-            </Text>
-            <Text
-              className="text-saparu-deep text-center mb-5"
-              style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 17 }}>
-              Daftar ke Saparu
-            </Text>
+            {/* Title */}
+        <Text
+        className="text-[32px] font-bold"
+        style={{
+          color: "#FFD2C7",
+          textShadowColor: "#E89E91",
+          textShadowOffset: { width: 2.5, height: 1 },
+          textShadowRadius: 0,
+          fontFamily: 'FuzzyBubbles_700Bold'
+        }}
+      >
+      Sign Up on
+      </Text>
+      <Text
+        className="text-saparu-rose text-[32px] px-3"
+        style={{ fontFamily: 'FuzzyBubbles_700Bold', 
+          color: '#9BCEC1', 
+          textShadowColor: "#E89E91",
+          textShadowOffset: { width: 2.5, height: 1 },
+          textShadowRadius: 0,
+        }}>
+        Saparu
+      </Text>
 
             {/* Email Input */}
             <View
-              className="flex-row items-center bg-white w-full mb-3"
+              className="flex-row items-center bg-white w-full mb-3 mt-3"
               style={{
                 borderRadius: 999,
                 paddingHorizontal: 16,
@@ -162,9 +175,6 @@ export default function RegisterScreen() {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
               />
-              <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
-                <EyeIcon />
-              </Pressable>
             </View>
 
             {/* Confirm Password Input */}
@@ -188,9 +198,6 @@ export default function RegisterScreen() {
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
               />
-              <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} hitSlop={10}>
-                <EyeIcon />
-              </Pressable>
             </View>
 
             {/* Register Button */}
