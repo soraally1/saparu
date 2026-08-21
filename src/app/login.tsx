@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -9,8 +10,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Image } from 'expo-image';
-import Svg, { Path, G } from 'react-native-svg';
+import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
+import Svg, { G, Path } from 'react-native-svg';
 
 // ─── Warna Saparu ─────────────────────────────────────────────
 const C = {
@@ -65,11 +66,51 @@ function EyeIcon() {
 }
 
 // ─── Screen ───────────────────────────────────────────────────
+import api from '@/lib/axios';
+import { useAuthStore } from '@/store/useAuthStore';
+import { ActivityIndicator, Alert } from 'react-native';
+
 export default function LoginScreen() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
+  const [isVisible, setIsVisible] = useState(true);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const setAuth = useAuthStore(state => state.setAuth);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Harap isi email dan password');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await api.post('/auth/login', { email, password });
+
+      if (response.status === 200) {
+        const { token, patient } = response.data;
+        await setAuth(token, patient);
+
+        // Redirect ke halaman dashboard sementara
+        router.replace('/dashboard');
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Email atau password salah';
+      Alert.alert('Gagal Login', errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNavigateRegister = () => {
+    setIsVisible(false);
+    setTimeout(() => {
+      router.replace('/register');
+    }, 400);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -81,140 +122,151 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
 
-        {/* Mascot — overlaps card from top */}
-        <View className="items-center z-[100] -mb-8">
-          <Image
-            source={require('@/assets/images/axolot.svg')}
-            style={{ width: 240, height: 220 }}
-            contentFit="contain"
-          />
-        </View>
+        <View className="w-full max-w-[380px] items-center">
+          {isVisible && (
+            <Animated.View
+              className="w-full items-center"
+              entering={SlideInDown.duration(400)}
+              exiting={SlideOutDown.duration(400)}
+            >
+              {/* Mascot — overlaps card from top */}
+              <View className="items-center z-[100] -mb-10">
+                <Image
+                  source={require('@/assets/images/axolot.svg')}
+                  style={{ width: 240, height: 220 }}
+                  contentFit="contain"
+                />
+              </View>
 
-        {/* Card */}
-        <View
-          className="w-full bg-saparu-card items-center elevation-1"
-          style={{
-            borderTopLeftRadius: 50,
-            borderTopRightRadius: 50,
-            paddingHorizontal: 28,
-            paddingTop: 44,
-            marginTop: -10,
-            paddingBottom: 28,
-            elevation: 1,
-          }}>
+              {/* Card */}
+              <View
+                className="w-full bg-saparu-card items-center"
+                style={{
+                  borderTopLeftRadius: 50,
+                  borderTopRightRadius: 50,
+                  paddingHorizontal: 28,
+                  paddingTop: 44,
+                  marginTop: -10,
+                  paddingBottom: 28,
+                }}>
 
-        {/* Title */}
-        <Text
-        className="text-[32px] font-bold"
-        style={{
-          color: "#FFD2C7",
-          textShadowColor: "#E89E91",
-          textShadowOffset: { width: 2.5, height: 1 },
-          textShadowRadius: 0,
-          fontFamily: 'FuzzyBubbles_700Bold'
-        }}
-      >
-      Log in on
-      <Text
-        className="text-saparu-rose px-3"
-        style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#9BCEC1' }}>
-        Saparu
-      </Text>
-      </Text>
+                {/* Title */}
+                <Text
+                  className="text-saparu-btn text-center mb-[22px]"
+                  style={{
+                    fontFamily: 'FuzzyBubbles_400Regular',
+                    fontSize: 26,
+                  }}>
+                  Log in on{' '}
+                  <Text
+                    className="text-saparu-rose"
+                    style={{ fontFamily: 'FuzzyBubbles_700Bold' }}>
+                    Saparu
+                  </Text>
+                </Text>
 
-          {/* Email Input */}
-          <View
-            className="flex-row items-center bg-white w-full mb-3 mt-3"
-            style={{
-              borderRadius: 44,
-              paddingHorizontal: 16,
-              height: 52,
-              elevation: 2,
-            }}>
-            <View className="mr-[10px] justify-center items-center">
-              <UserIcon />
-            </View>
-            <TextInput
-              className="flex-1 text-saparu-text"
-              style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14 }}
-              placeholder="Email or Username"
-              placeholderTextColor={C.placeholder}
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-          </View>
+                {/* Email Input */}
+                <View
+                  className="flex-row items-center bg-white w-full mb-3"
+                  style={{
+                    borderRadius: 44,
+                    paddingHorizontal: 16,
+                    height: 52,
 
-          {/* Password Input */}
-          <View
-            className="flex-row items-center bg-white w-full mb-3"
-            style={{
-              borderRadius: 44,
-              paddingHorizontal: 16,
-              height: 52,
-              elevation: 2,
-            }}>
-            <View className="mr-[10px] justify-center items-center">
-              <PassIcon />
-            </View>
-            <TextInput
-              className="flex-1 text-saparu-text"
-              style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14 }}
-              placeholder="Password"
-              placeholderTextColor={C.placeholder}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
-          </View>
+                  }}>
+                  <View className="mr-[10px] justify-center items-center">
+                    <UserIcon />
+                  </View>
+                  <TextInput
+                    className="flex-1 text-saparu-text"
+                    style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14 }}
+                    placeholder="Email"
+                    placeholderTextColor={C.placeholder}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
 
-          {/* Forgot Password */}
-          <Pressable className="self-start ml-[6px] mb-4 -mt-1">
-            <Text
-              className="text-saparu-muted"
-              style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 13 }}>
-              Forget Password?
-            </Text>
-          </Pressable>
+                {/* Password Input */}
+                <View
+                  className="flex-row items-center bg-white w-full mb-3"
+                  style={{
+                    borderRadius: 44,
+                    paddingHorizontal: 16,
+                    height: 52,
 
-          {/* Login Button */}
-          <Pressable
-            className="w-full items-center mb-4"
-            style={{
-              backgroundColor: C.btn,
-              borderRadius: 999,
-              paddingVertical: 16,
-              elevation: 5,
-            }}
-            onPress={() => {}}>
-            <Text
-              className="text-white"
-              style={{
-                fontFamily: 'FuzzyBubbles_700Bold',
-                fontSize: 18,
-                letterSpacing: 5,
-              }}>
-              L o g i n
-            </Text>
-          </Pressable>
+                  }}>
+                  <View className="mr-[10px] justify-center items-center">
+                    <PassIcon />
+                  </View>
+                  <TextInput
+                    className="flex-1 text-saparu-text"
+                    style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14 }}
+                    placeholder="Password"
+                    placeholderTextColor={C.placeholder}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                  />
+                  <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
+                    <EyeIcon />
+                  </Pressable>
+                </View>
 
-          {/* Sign Up Link */}
-          <View className="items-center gap-[2px]">
-            <Text
-              className="text-saparu-muted italic"
-              style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 13 }}>
-              Didn't have an account?
-            </Text>
-            <Pressable onPress={() => router.push('/register')}>
-              <Text
-                className="text-saparu-rose"
-                style={{ fontFamily: 'FuzzyBubbles_700Bold', fontSize: 13 }}>
-                Sign Up
-              </Text>
-            </Pressable>
-          </View>
+                {/* Forgot Password */}
+                <Pressable className="self-start ml-[6px] mb-4 -mt-1">
+                  <Text
+                    className="text-saparu-muted"
+                    style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 13 }}>
+                    Forget Password?
+                  </Text>
+                </Pressable>
 
+                {/* Login Button */}
+                <Pressable
+                  className={`w-full items-center mb-4 ${isLoading ? 'opacity-70' : ''}`}
+                  style={{
+                    backgroundColor: C.btn,
+                    borderRadius: 999,
+                    paddingVertical: 16,
+                  }}
+                  disabled={isLoading}
+                  onPress={handleLogin}>
+                  {isLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text
+                      className="text-white"
+                      style={{
+                        fontFamily: 'FuzzyBubbles_700Bold',
+                        fontSize: 18,
+                        letterSpacing: 5,
+                      }}>
+                      L o g i n
+                    </Text>
+                  )}
+                </Pressable>
+
+                {/* Sign Up Link */}
+                <View className="items-center gap-[2px]">
+                  <Text
+                    className="text-saparu-muted"
+                    style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 13 }}>
+                    Didn't have an account?
+                  </Text>
+                  <Pressable onPress={handleNavigateRegister} disabled={isLoading}>
+                    <Text
+                      className="text-saparu-rose"
+                      style={{ fontFamily: 'FuzzyBubbles_700Bold', fontSize: 13 }}>
+                      Sign Up
+                    </Text>
+                  </Pressable>
+                </View>
+              </View>
+            </Animated.View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
