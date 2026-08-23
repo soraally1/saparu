@@ -46,11 +46,6 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === 'login' || segments[0] === 'register';
 
     if (token && inAuthGroup) {
-      // Redirect to dashboard if user is logged in but tries to access login/register
-      router.replace('/dashboard');
-    } else if (token && !segments[0]) {
-      // Redirect to dashboard if user is on index
-      router.replace('/dashboard');
     }
   }, [token, isReady, fontsLoaded, segments]);
 
@@ -61,9 +56,10 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: '#9BCEC1' } }}>
         <Stack.Screen name="index" />
-        <Stack.Screen name="login" options={{ animation: 'fade' }} />
-        <Stack.Screen name="register" options={{ animation: 'fade' }} />
-        <Stack.Screen name="dashboard" />
+        <Stack.Screen name="welcome" />
+        <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
+        <Stack.Screen name="pilih-gender" />
       </Stack>
     </>
   );

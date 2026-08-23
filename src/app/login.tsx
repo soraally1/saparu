@@ -150,20 +150,24 @@ export default function LoginScreen() {
                   paddingBottom: 28,
                 }}>
 
-                {/* Title */}
-                <Text
-                  className="text-saparu-btn text-center mb-[22px]"
-                  style={{
-                    fontFamily: 'FuzzyBubbles_400Regular',
-                    fontSize: 26,
-                  }}>
-                  Log in on{' '}
-                  <Text
-                    className="text-saparu-rose"
-                    style={{ fontFamily: 'FuzzyBubbles_700Bold' }}>
-                    Saparu
-                  </Text>
-                </Text>
+        {/* Title */}
+        <Text
+        className="text-[32px] font-bold"
+        style={{
+          color: "#FFB6A6",
+          textShadowColor: "#BFA4A6",
+          textShadowOffset: { width: 2.5, height: 1 },
+          textShadowRadius: 0,
+          fontFamily: 'FuzzyBubbles_700Bold'
+        }}
+      >
+      Log in on
+      <Text
+        className="text-saparu-rose px-3"
+        style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#9BCEC1' }}>
+        Saparu
+      </Text>
+      </Text>
 
                 {/* Email Input */}
                 <View

@@ -177,37 +177,32 @@ export default function RegisterScreen() {
               paddingTop: 44,
               marginTop: -10,
               paddingBottom: 28,
-              
+              elevation: 8,
             }}>
 
-            <Text className="text-saparu-deep text-center mb-[2px] font-fuzzy-bold text-[22px]">
-              Halo Bunda
-            </Text>
-            <Text className="text-saparu-deep text-center mb-5 font-fuzzy text-[17px]">
-              Daftar ke Saparu
-            </Text>
-
-            {/* Full Name Input */}
-            <View
-              className="flex-row items-center bg-white w-full mb-3"
-              style={{
-                borderRadius: 999,
-                paddingHorizontal: 16,
-                height: 52,
-                
-              }}>
-              <View className="mr-[10px] justify-center items-center">
-                <UserIcon />
-              </View>
-              <TextInput
-                className="flex-1 text-saparu-text font-fuzzy text-[14px]"
-                placeholder="Nama Lengkap"
-                placeholderTextColor={C.placeholder}
-                value={fullName}
-                onChangeText={setFullName}
-                autoCapitalize="words"
-              />
-            </View>
+            {/* Title */}
+        <Text
+        className="text-[32px] font-bold"
+        style={{
+          color: "#FFB6A6",
+          textShadowColor: "#BFA4A6",
+          textShadowOffset: { width: 2.5, height: 1 },
+          textShadowRadius: 0,
+          fontFamily: 'FuzzyBubbles_700Bold'
+        }}
+      >
+      Sign Up on
+      </Text>
+      <Text
+        className="text-saparu-rose text-[32px] px-3"
+        style={{ fontFamily: 'FuzzyBubbles_700Bold', 
+          color: '#9BCEC1', 
+          textShadowColor: "#BFA4A6",
+          textShadowOffset: { width: 2.5, height: 1 },
+          textShadowRadius: 0,
+        }}>
+        Saparu
+      </Text>
 
             {/* Email Input */}
             <View
