@@ -107,8 +107,8 @@ export default function LoginScreen() {
         <Text
         className="text-[32px] font-bold"
         style={{
-          color: "#FFD2C7",
-          textShadowColor: "#E89E91",
+          color: "#FFB6A6",
+          textShadowColor: "#BFA4A6",
           textShadowOffset: { width: 2.5, height: 1 },
           textShadowRadius: 0,
           fontFamily: 'FuzzyBubbles_700Bold'

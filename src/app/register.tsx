@@ -110,8 +110,8 @@ export default function RegisterScreen() {
         <Text
         className="text-[32px] font-bold"
         style={{
-          color: "#FFD2C7",
-          textShadowColor: "#E89E91",
+          color: "#FFB6A6",
+          textShadowColor: "#BFA4A6",
           textShadowOffset: { width: 2.5, height: 1 },
           textShadowRadius: 0,
           fontFamily: 'FuzzyBubbles_700Bold'
@@ -123,7 +123,7 @@ export default function RegisterScreen() {
         className="text-saparu-rose text-[32px] px-3"
         style={{ fontFamily: 'FuzzyBubbles_700Bold', 
           color: '#9BCEC1', 
-          textShadowColor: "#E89E91",
+          textShadowColor: "#BFA4A6",
           textShadowOffset: { width: 2.5, height: 1 },
           textShadowRadius: 0,
         }}>
