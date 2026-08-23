@@ -93,8 +93,8 @@ export default function LoginScreen() {
         const { token, patient } = response.data;
         await setAuth(token, patient);
 
-        // Redirect ke halaman dashboard sementara
-        router.replace('/dashboard');
+        // Redirect ke halaman welcome sementara
+        router.replace({ pathname: '/welcome', params: { source: 'login' } });
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -122,7 +122,7 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
 
-        <View className="w-full max-w-[380px] items-center">
+        <View className="w-full max-w-[480px] items-center">
           {isVisible && (
             <Animated.View
               className="w-full items-center"
@@ -152,19 +152,18 @@ export default function LoginScreen() {
 
         {/* Title */}
         <Text
-        className="text-[32px] font-bold"
+        className="text-[32px] font-fuzzy-bold"
         style={{
           color: "#FFB6A6",
           textShadowColor: "#BFA4A6",
           textShadowOffset: { width: 2.5, height: 1 },
           textShadowRadius: 0,
-          fontFamily: 'FuzzyBubbles_700Bold'
         }}
       >
       Log in on
       <Text
-        className="text-saparu-rose px-3"
-        style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#9BCEC1' }}>
+        className="text-saparu-rose px-3 font-fuzzy-bold"
+        style={{ color: '#9BCEC1' }}>
         Saparu
       </Text>
       </Text>
@@ -182,8 +181,7 @@ export default function LoginScreen() {
                     <UserIcon />
                   </View>
                   <TextInput
-                    className="flex-1 text-saparu-text"
-                    style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14 }}
+                    className="flex-1 text-saparu-text font-fuzzy text-[14px]"
                     placeholder="Email"
                     placeholderTextColor={C.placeholder}
                     value={email}
@@ -206,8 +204,7 @@ export default function LoginScreen() {
                     <PassIcon />
                   </View>
                   <TextInput
-                    className="flex-1 text-saparu-text"
-                    style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14 }}
+                    className="flex-1 text-saparu-text font-fuzzy text-[14px]"
                     placeholder="Password"
                     placeholderTextColor={C.placeholder}
                     value={password}
@@ -221,9 +218,7 @@ export default function LoginScreen() {
 
                 {/* Forgot Password */}
                 <Pressable className="self-start ml-[6px] mb-4 -mt-1">
-                  <Text
-                    className="text-saparu-muted"
-                    style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 13 }}>
+                  <Text className="text-saparu-muted font-fuzzy text-[13px]">
                     Forget Password?
                   </Text>
                 </Pressable>
@@ -241,13 +236,7 @@ export default function LoginScreen() {
                   {isLoading ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <Text
-                      className="text-white"
-                      style={{
-                        fontFamily: 'FuzzyBubbles_700Bold',
-                        fontSize: 18,
-                        letterSpacing: 5,
-                      }}>
+                    <Text className="text-white font-fuzzy-bold text-[18px] tracking-[5px]">
                       L o g i n
                     </Text>
                   )}
@@ -255,15 +244,11 @@ export default function LoginScreen() {
 
                 {/* Sign Up Link */}
                 <View className="items-center gap-[2px]">
-                  <Text
-                    className="text-saparu-muted"
-                    style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 13 }}>
+                  <Text className="text-saparu-muted font-fuzzy text-[13px]">
                     Didn't have an account?
                   </Text>
                   <Pressable onPress={handleNavigateRegister} disabled={isLoading}>
-                    <Text
-                      className="text-saparu-rose"
-                      style={{ fontFamily: 'FuzzyBubbles_700Bold', fontSize: 13 }}>
+                    <Text className="text-saparu-rose font-fuzzy-bold text-[13px]">
                       Sign Up
                     </Text>
                   </Pressable>

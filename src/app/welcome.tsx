@@ -1,4 +1,4 @@
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Pressable, Text, View, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 
@@ -19,6 +19,7 @@ const C = {
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { source } = useLocalSearchParams();
 
   return (
     <>
@@ -86,7 +87,13 @@ export default function WelcomeScreen() {
       {/* Layer 4: Tombol Mulai Sekarang */}
       <View className="absolute bottom-10 left-0 right-0 items-center">
         <Pressable
-          onPress={() => router.replace('/login')}
+          onPress={() => {
+            if (source === 'register') {
+              router.replace('/register-name');
+            } else {
+              router.replace('/dashboard');
+            }
+          }}
           style={({ pressed }) => ({
             backgroundColor: pressed ? '#F0B8C4' : '#FFB6A6',
             borderRadius: 999,

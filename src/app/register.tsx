@@ -14,8 +14,8 @@ import {
   TextInput,
   View
 } from 'react-native';
-import Svg, { G, Path } from 'react-native-svg';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
+import Svg, { G, Path } from 'react-native-svg';
 
 // ─── Warna Saparu ─────────────────────────────────────────────
 const C = {
@@ -111,11 +111,11 @@ export default function RegisterScreen() {
 
       if (response.status === 200 || response.status === 201) {
         const { token, patient } = response.data;
-        
+
         if (token && patient) {
           // Backend successfully auto-logged in
           await useAuthStore.getState().setAuth(token, patient);
-          router.replace('/dashboard');
+          router.replace({ pathname: '/welcome', params: { source: 'register' } });
         } else {
           // Fallback if token is missing
           Alert.alert(
@@ -151,7 +151,7 @@ export default function RegisterScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
 
-        <View className="w-full max-w-[380px] items-center">
+        <View className="w-full max-w-[480px] items-center">
           {isVisible && (
             <Animated.View
               className="w-full items-center"
@@ -160,154 +160,159 @@ export default function RegisterScreen() {
             >
               {/* Mascot — peeking from top of card */}
               <View className="items-center z-[100] -mb-10">
-            <Image
-              source={require('@/assets/images/axolot.svg')}
-              style={{ width: 240, height: 220 }}
-              contentFit="contain"
-            />
-          </View>
-
-          {/* Card */}
-          <View
-            className="w-full bg-saparu-card items-center "
-            style={{
-              borderTopLeftRadius: 50,
-              borderTopRightRadius: 50,
-              paddingHorizontal: 28,
-              paddingTop: 44,
-              marginTop: -10,
-              paddingBottom: 28,
-              elevation: 8,
-            }}>
-
-            {/* Title */}
-        <Text
-        className="text-[32px] font-bold"
-        style={{
-          color: "#FFB6A6",
-          textShadowColor: "#BFA4A6",
-          textShadowOffset: { width: 2.5, height: 1 },
-          textShadowRadius: 0,
-          fontFamily: 'FuzzyBubbles_700Bold'
-        }}
-      >
-      Sign Up on
-      </Text>
-      <Text
-        className="text-saparu-rose text-[32px] px-3"
-        style={{ fontFamily: 'FuzzyBubbles_700Bold', 
-          color: '#9BCEC1', 
-          textShadowColor: "#BFA4A6",
-          textShadowOffset: { width: 2.5, height: 1 },
-          textShadowRadius: 0,
-        }}>
-        Saparu
-      </Text>
-
-            {/* Email Input */}
-            <View
-              className="flex-row items-center bg-white w-full mb-3"
-              style={{
-                borderRadius: 999,
-                paddingHorizontal: 16,
-                height: 52,
-                
-              }}>
-              <View className="mr-[10px] justify-center items-center">
-                <UserIcon />
+                <Image
+                  source={require('@/assets/images/axolot.svg')}
+                  style={{ width: 240, height: 220 }}
+                  contentFit="contain"
+                />
               </View>
-              <TextInput
-                className="flex-1 text-saparu-text font-fuzzy text-[14px]"
-                placeholder="Email"
-                placeholderTextColor={C.placeholder}
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-            </View>
 
-            {/* Password Input */}
-            <View
-              className="flex-row items-center bg-white w-full mb-3"
-              style={{
-                borderRadius: 999,
-                paddingHorizontal: 16,
-                height: 52,
-                
-              }}>
-              <View className="mr-[10px] justify-center items-center">
-                <PassIcon />
-              </View>
-              <TextInput
-                className="flex-1 text-saparu-text font-fuzzy text-[14px]"
-                placeholder="Password"
-                placeholderTextColor={C.placeholder}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
-              <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
-                <EyeIcon />
-              </Pressable>
-            </View>
+              {/* Card */}
+              <View
+                className="w-full bg-saparu-card items-center "
+                style={{
+                  borderTopLeftRadius: 50,
+                  borderTopRightRadius: 50,
+                  paddingHorizontal: 28,
+                  paddingTop: 44,
+                  marginTop: -10,
+                  paddingBottom: 28,
 
-            {/* Confirm Password Input */}
-            <View
-              className="flex-row items-center bg-white w-full mb-3"
-              style={{
-                borderRadius: 999,
-                paddingHorizontal: 16,
-                height: 52,
-                
-              }}>
-              <View className="mr-[10px] justify-center items-center">
-                <PassIcon />
-              </View>
-              <TextInput
-                className="flex-1 text-saparu-text font-fuzzy text-[14px]"
-                placeholder="Confirm Password"
-                placeholderTextColor={C.placeholder}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry={!showConfirmPassword}
-              />
-              <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} hitSlop={10}>
-                <EyeIcon />
-              </Pressable>
-            </View>
+                }}>
 
-            {/* Register Button */}
-            <Pressable
-              className={`w-full items-center mt-[6px] mb-4 ${isLoading ? 'opacity-70' : ''}`}
-              style={{
-                backgroundColor: C.btn,
-                borderRadius: 999,
-                paddingVertical: 16,
-                
-              }}
-              disabled={isLoading}
-              onPress={handleRegister}>
-              {isLoading ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text className="text-white font-fuzzy-bold text-[18px] tracking-[5px]">
-                  R e g i s t e r
+                <Text className="text-saparu-deep text-center mb-[2px] font-fuzzy-bold text-[22px]">
+                  Halo Bunda
                 </Text>
-              )}
-            </Pressable>
-
-            {/* Login Link */}
-            <View className="items-center gap-[2px]">
-              <Text className="text-saparu-muted font-fuzzy text-[13px]">
-                Already have account?
-              </Text>
-              <Pressable onPress={handleNavigateLogin} disabled={isLoading}>
-                <Text className="text-saparu-rose font-fuzzy-bold text-[13px]">
-                  Login Here
+                <Text className="text-saparu-deep text-center mb-5 font-fuzzy text-[17px]">
+                  Daftar ke Saparu
                 </Text>
-              </Pressable>
-            </View>
+
+                {/* Full Name Input */}
+                <View
+                  className="flex-row items-center bg-white w-full mb-3"
+                  style={{
+                    borderRadius: 999,
+                    paddingHorizontal: 16,
+                    height: 52,
+
+                  }}>
+                  <View className="mr-[10px] justify-center items-center">
+                    <UserIcon />
+                  </View>
+                  <TextInput
+                    className="flex-1 text-saparu-text font-fuzzy text-[14px]"
+                    placeholder="Nama Lengkap"
+                    placeholderTextColor={C.placeholder}
+                    value={fullName}
+                    onChangeText={setFullName}
+                    autoCapitalize="words"
+                  />
+                </View>
+
+                {/* Email Input */}
+                <View
+                  className="flex-row items-center bg-white w-full mb-3"
+                  style={{
+                    borderRadius: 999,
+                    paddingHorizontal: 16,
+                    height: 52,
+
+                  }}>
+                  <View className="mr-[10px] justify-center items-center">
+                    <UserIcon />
+                  </View>
+                  <TextInput
+                    className="flex-1 text-saparu-text font-fuzzy text-[14px]"
+                    placeholder="Email"
+                    placeholderTextColor={C.placeholder}
+                    value={email}
+                    onChangeText={setEmail}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                  />
+                </View>
+
+                {/* Password Input */}
+                <View
+                  className="flex-row items-center bg-white w-full mb-3"
+                  style={{
+                    borderRadius: 999,
+                    paddingHorizontal: 16,
+                    height: 52,
+
+                  }}>
+                  <View className="mr-[10px] justify-center items-center">
+                    <PassIcon />
+                  </View>
+                  <TextInput
+                    className="flex-1 text-saparu-text font-fuzzy text-[14px]"
+                    placeholder="Password"
+                    placeholderTextColor={C.placeholder}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                  />
+                  <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
+                    <EyeIcon />
+                  </Pressable>
+                </View>
+
+                {/* Confirm Password Input */}
+                <View
+                  className="flex-row items-center bg-white w-full mb-3"
+                  style={{
+                    borderRadius: 999,
+                    paddingHorizontal: 16,
+                    height: 52,
+
+                  }}>
+                  <View className="mr-[10px] justify-center items-center">
+                    <PassIcon />
+                  </View>
+                  <TextInput
+                    className="flex-1 text-saparu-text font-fuzzy text-[14px]"
+                    placeholder="Confirm Password"
+                    placeholderTextColor={C.placeholder}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    secureTextEntry={!showConfirmPassword}
+                  />
+                  <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} hitSlop={10}>
+                    <EyeIcon />
+                  </Pressable>
+                </View>
+
+                {/* Register Button */}
+                <Pressable
+                  className={`w-full items-center mt-[6px] mb-4 ${isLoading ? 'opacity-70' : ''}`}
+                  style={{
+                    backgroundColor: C.btn,
+                    borderRadius: 999,
+                    paddingVertical: 16,
+
+                  }}
+                  disabled={isLoading}
+                  onPress={handleRegister}>
+                  {isLoading ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <Text className="text-white font-fuzzy-bold text-[18px] tracking-[5px]">
+                      R e g i s t e r
+                    </Text>
+                  )}
+                </Pressable>
+
+                {/* Login Link */}
+                <View className="items-center gap-[2px]">
+                  <Text className="text-saparu-muted font-fuzzy text-[13px]">
+                    Already have account?
+                  </Text>
+                  <Pressable onPress={handleNavigateLogin} disabled={isLoading}>
+                    <Text className="text-saparu-rose font-fuzzy-bold text-[13px]">
+                      Login Here
+                    </Text>
+                  </Pressable>
+                </View>
 
               </View>
             </Animated.View>
