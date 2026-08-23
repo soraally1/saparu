@@ -1,16 +1,21 @@
+import api from '@/lib/axios';
+import { useAuthStore } from '@/store/useAuthStore';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
   Text,
   TextInput,
-  View,
+  View
 } from 'react-native';
-import { Image } from 'expo-image';
-import Svg, { Path, G } from 'react-native-svg';
+import Svg, { G, Path } from 'react-native-svg';
+import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 
 // ─── Warna Saparu ─────────────────────────────────────────────
 const C = {
@@ -64,14 +69,77 @@ function EyeIcon() {
   );
 }
 
-// ─── Screen ───────────────────────────────────────────────────
 export default function RegisterScreen() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
+  const [isVisible, setIsVisible] = useState(true);
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleRegister = async () => {
+    if (!fullName || !email || !password || !confirmPassword) {
+      Alert.alert('Error', 'Harap isi semua kolom');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Password dan Confirm Password tidak cocok');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password minimal 6 karakter');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // POST ke endpoint /api/v1/auth/register
+      const response = await api.post('/auth/register', {
+        email: email,
+        password: password,
+        full_name: fullName,
+        // TODO: Tambahkan input untuk date_of_birth, gender, dan medical_history di UI nanti
+        date_of_birth: '1990-01-01T00:00:00Z',
+        gender: 'male',
+        medical_history: 'Tidak ada'
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        const { token, patient } = response.data;
+        
+        if (token && patient) {
+          // Backend successfully auto-logged in
+          await useAuthStore.getState().setAuth(token, patient);
+          router.replace('/dashboard');
+        } else {
+          // Fallback if token is missing
+          Alert.alert(
+            'Registrasi Berhasil',
+            'Silakan login secara manual dengan akun Anda.'
+          );
+          router.replace('/login');
+        }
+      }
+    } catch (error: any) {
+      console.error('Register error:', error);
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Terjadi kesalahan saat registrasi';
+      Alert.alert('Gagal', errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNavigateLogin = () => {
+    setIsVisible(false);
+    setTimeout(() => {
+      router.replace('/login');
+    }, 400);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -83,25 +151,31 @@ export default function RegisterScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
 
-        <View className="w-full max-w-[400px] items-center">
-
-          {/* Mascot — peeking from top of card */}
-          <View className="items-center -mb-8 z-10">
+        <View className="w-full max-w-[380px] items-center">
+          {isVisible && (
+            <Animated.View
+              className="w-full items-center"
+              entering={SlideInDown.duration(400)}
+              exiting={SlideOutDown.duration(400)}
+            >
+              {/* Mascot — peeking from top of card */}
+              <View className="items-center z-[100] -mb-10">
             <Image
               source={require('@/assets/images/axolot.svg')}
-              style={{ width: 240, height: 200 }}
+              style={{ width: 240, height: 220 }}
               contentFit="contain"
             />
           </View>
 
           {/* Card */}
           <View
-            className="w-full bg-saparu-card items-center"
+            className="w-full bg-saparu-card items-center "
             style={{
               borderTopLeftRadius: 50,
               borderTopRightRadius: 50,
               paddingHorizontal: 28,
-              paddingTop: 28,
+              paddingTop: 44,
+              marginTop: -10,
               paddingBottom: 28,
               elevation: 8,
             }}>
@@ -132,23 +206,22 @@ export default function RegisterScreen() {
 
             {/* Email Input */}
             <View
-              className="flex-row items-center bg-white w-full mb-3 mt-3"
+              className="flex-row items-center bg-white w-full mb-3"
               style={{
                 borderRadius: 999,
                 paddingHorizontal: 16,
                 height: 52,
-                elevation: 2,
+                
               }}>
               <View className="mr-[10px] justify-center items-center">
                 <UserIcon />
               </View>
               <TextInput
-                className="flex-1 text-saparu-text"
-                style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14 }}
-                placeholder="Email or Username"
+                className="flex-1 text-saparu-text font-fuzzy text-[14px]"
+                placeholder="Email"
                 placeholderTextColor={C.placeholder}
-                value={username}
-                onChangeText={setUsername}
+                value={email}
+                onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
               />
@@ -161,20 +234,22 @@ export default function RegisterScreen() {
                 borderRadius: 999,
                 paddingHorizontal: 16,
                 height: 52,
-                elevation: 2,
+                
               }}>
               <View className="mr-[10px] justify-center items-center">
                 <PassIcon />
               </View>
               <TextInput
-                className="flex-1 text-saparu-text"
-                style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14 }}
+                className="flex-1 text-saparu-text font-fuzzy text-[14px]"
                 placeholder="Password"
                 placeholderTextColor={C.placeholder}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
               />
+              <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
+                <EyeIcon />
+              </Pressable>
             </View>
 
             {/* Confirm Password Input */}
@@ -184,62 +259,62 @@ export default function RegisterScreen() {
                 borderRadius: 999,
                 paddingHorizontal: 16,
                 height: 52,
-                elevation: 2,
+                
               }}>
               <View className="mr-[10px] justify-center items-center">
                 <PassIcon />
               </View>
               <TextInput
-                className="flex-1 text-saparu-text"
-                style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14 }}
+                className="flex-1 text-saparu-text font-fuzzy text-[14px]"
                 placeholder="Confirm Password"
                 placeholderTextColor={C.placeholder}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirmPassword}
               />
+              <Pressable onPress={() => setShowConfirmPassword(!showConfirmPassword)} hitSlop={10}>
+                <EyeIcon />
+              </Pressable>
             </View>
 
             {/* Register Button */}
             <Pressable
-              className="w-full items-center mt-[6px] mb-4"
+              className={`w-full items-center mt-[6px] mb-4 ${isLoading ? 'opacity-70' : ''}`}
               style={{
                 backgroundColor: C.btn,
                 borderRadius: 999,
                 paddingVertical: 16,
-                elevation: 5,
+                
               }}
-              onPress={() => {}}>
-              <Text
-                className="text-white"
-                style={{
-                  fontFamily: 'FuzzyBubbles_700Bold',
-                  fontSize: 18,
-                  letterSpacing: 5,
-                }}>
-                R e g i s t e r
-              </Text>
+              disabled={isLoading}
+              onPress={handleRegister}>
+              {isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-white font-fuzzy-bold text-[18px] tracking-[5px]">
+                  R e g i s t e r
+                </Text>
+              )}
             </Pressable>
 
             {/* Login Link */}
             <View className="items-center gap-[2px]">
-              <Text
-                className="text-saparu-muted italic"
-                style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 13 }}>
+              <Text className="text-saparu-muted font-fuzzy text-[13px]">
                 Already have account?
               </Text>
-              <Pressable onPress={() => router.replace('/login')}>
-                <Text
-                  className="text-saparu-rose"
-                  style={{ fontFamily: 'FuzzyBubbles_700Bold', fontSize: 13 }}>
+              <Pressable onPress={handleNavigateLogin} disabled={isLoading}>
+                <Text className="text-saparu-rose font-fuzzy-bold text-[13px]">
                   Login Here
                 </Text>
               </Pressable>
             </View>
 
-          </View>
+              </View>
+            </Animated.View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
