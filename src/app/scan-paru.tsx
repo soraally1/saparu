@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, Alert, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather, FontAwesome5 } from '@expo/vector-icons';
@@ -46,10 +46,20 @@ export default function ScanParuScreen() {
   const [result, setResult] = useState<ApiPredictionResult | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
 
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const shakeAnim = useSharedValue(0);
   const pointerAnimY = useSharedValue(100);
   const pointerScale = useSharedValue(1);
   const pointerOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     // Check if tutorial has been seen
@@ -156,7 +166,8 @@ export default function ScanParuScreen() {
       );
 
       // Auto stop after 5 seconds
-      setTimeout(async () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(async () => {
         await stopRecordingAndProcess();
       }, 5000);
 
@@ -167,15 +178,22 @@ export default function ScanParuScreen() {
   };
 
   const stopRecordingAndProcess = async () => {
-    setIsRecording(false);
-    shakeAnim.value = withTiming(0);
-    setIsProcessing(true);
-
     try {
-      await recorder.stop();
+      try {
+        await recorder.stop();
+      } catch (e) {
+        console.log('Recorder stop failed (possibly released):', e);
+        // If it fails because the component unmounted or object was released, just return
+        return;
+      }
+      
       const uri = recorder.uri;
       console.log('Recording stopped and stored at', uri);
       
+      setIsRecording(false);
+      shakeAnim.value = withTiming(0);
+      setIsProcessing(true);
+
       if (!uri) throw new Error('URI not found');
 
       // Panggil Vercel API Backend (Menggunakan model SPRSound secara default)
@@ -187,7 +205,9 @@ export default function ScanParuScreen() {
       console.error('Failed to process recording via API', error);
       Alert.alert('Error API', 'Gagal menghubungi server untuk memproses suara paru-paru. Pastikan internet Anda lancar.');
     } finally {
+      setIsRecording(false);
       setIsProcessing(false);
+      shakeAnim.value = withTiming(0);
     }
   };
 
