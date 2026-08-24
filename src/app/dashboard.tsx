@@ -206,7 +206,7 @@ export default function DashboardScreen() {
           </View>
 
           {/* Content */}
-          <View style={{ flex: 1, marginLeft: 135, paddingVertical: 20 }}>
+          <View style={{ flex: 1, marginLeft: 165, paddingVertical: 20 }}>
             <View style={{ backgroundColor: 'rgba(255,255,255,0.25)', alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Feather name="bell" size={12} color="#FFFFFF" />
               <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', fontSize: 10, color: '#FFFFFF' }}>Pengingat Harian</Text>
@@ -244,11 +244,11 @@ export default function DashboardScreen() {
 
         {/* Doctor Section Header */}
         <View style={{ marginHorizontal: 20, marginTop: 40, marginBottom: -35, zIndex: 10 }}>
-          <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', fontSize: 20, color: '#7D3E50', marginBottom: 2 }}>
+          <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', fontSize: 20, color: '#6CA8C2', marginBottom: 2 }}>
             Butuh Konsultasi?
           </Text>
-          <Text style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14, color: '#C07088' }}>
-            Cari dokter terdekat nya!
+          <Text style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14, color: '#6CA8C2' }}>
+            "Cari dokter terdekat nya!"
           </Text>
         </View>
 
