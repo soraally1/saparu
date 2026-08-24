@@ -34,7 +34,13 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Aplikasi membutuhkan akses mikrofon untuk merekam suara paru-paru Anda."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

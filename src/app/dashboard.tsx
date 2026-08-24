@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/store/useAuthStore';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
@@ -173,16 +173,18 @@ export default function DashboardScreen() {
           </View>
 
           {/* Middle Card */}
-          <View style={{ width: '30%', marginTop: 0 }}>
-            <View style={{ backgroundColor: '#6CA8C2', width: '100%', aspectRatio: 1, borderRadius: 16, padding: 8, justifyContent: 'flex-end', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, overflow: 'visible' }}>
-              <View style={{ position: 'absolute', top: -80, left: 0, right: 0, alignItems: 'center', zIndex: 10, elevation: 5 }}>
-                <Image source={require('@/assets/images/axolot.svg')} style={{ width: 105, height: 105 }} contentFit="contain" />
+          <Link href="/scan-paru" asChild>
+            <Pressable style={{ width: '30%', marginTop: 0 }}>
+              <View style={{ backgroundColor: '#6CA8C2', width: '100%', aspectRatio: 1, borderRadius: 16, padding: 8, justifyContent: 'flex-end', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, overflow: 'visible' }}>
+                <View style={{ position: 'absolute', top: -80, left: 0, right: 0, alignItems: 'center', zIndex: 10, elevation: 5 }}>
+                  <Image source={require('@/assets/images/axolot.svg')} style={{ width: 105, height: 105 }} contentFit="contain" />
+                </View>
+                <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#FFFFFF', fontSize: 12, textAlign: 'center', paddingBottom: 10 }}>
+                  Cek Kesehatan{'\n'}Paru Kamu!
+                </Text>
               </View>
-              <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#FFFFFF', fontSize: 12, textAlign: 'center', paddingBottom: 10 }}>
-                Cek Kesehatan{'\n'}Paru Kamu!
-              </Text>
-            </View>
-          </View>
+            </Pressable>
+          </Link>
 
           {/* Right Card */}
           <View style={{ width: '30%', marginTop: 0 }}>
