@@ -1,11 +1,16 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import api from '@/lib/axios';
+import { useAuthStore } from '@/store/useAuthStore';
+import { useRegistrationStore } from '@/store/useRegistrationStore';
 import {
   Dimensions,
   Pressable,
   Text,
   View,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Image } from 'expo-image';
 
@@ -80,15 +85,54 @@ export default function RegisterHealthScreen() {
   const [riwayat, setRiwayat] = useState<string[]>([]);
   const [gejala, setGejala] = useState<string[]>([]);
   const [perawatan, setPerawatan] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleArray = (setter: React.Dispatch<React.SetStateAction<string[]>>, array: string[], item: string) => {
     if (array.includes(item)) setter(array.filter(i => i !== item));
     else setter([...array, item]);
   };
 
-  const handleLanjut = () => {
-    // Selesai registrasi -> kembali ke dashboard
-    router.replace('/dashboard');
+  const handleLanjut = async () => {
+    const regState = useRegistrationStore.getState();
+    const payload = {
+      email: regState.email,
+      password: regState.password,
+      full_name: regState.full_name,
+      firstName: regState.firstName,
+      lastName: regState.lastName || '',
+      dob: regState.dob,
+      age: regState.age,
+      gender: regState.gender,
+      height: regState.height,
+      weight: regState.weight,
+      kondisiPernapasan: kondisi,
+      riwayatPernapasan: riwayat,
+      gejalaPemicu: gejala,
+      perawatanSaatIni: perawatan,
+    };
+
+    setIsLoading(true);
+    try {
+      const response = await api.post('/auth/register', payload);
+      
+      if (response.status === 200 || response.status === 201) {
+        const { token, patient } = response.data;
+        if (token && patient) {
+          await useAuthStore.getState().setAuth(token, patient);
+          useRegistrationStore.getState().resetRegistration();
+          router.replace('/dashboard');
+        } else {
+          Alert.alert('Sukses', 'Registrasi berhasil, silakan login');
+          router.replace('/login');
+        }
+      }
+    } catch (error: any) {
+      console.error('Register API error:', error);
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Terjadi kesalahan saat menyimpan data ke server.';
+      Alert.alert('Gagal Registrasi', errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -141,8 +185,9 @@ export default function RegisterHealthScreen() {
       <View className="absolute bottom-10 right-0">
         <Pressable
           onPress={handleLanjut}
+          disabled={isLoading}
           style={({ pressed }) => ({
-            backgroundColor: pressed ? '#E8909A' : C.btn,
+            backgroundColor: isLoading ? '#E8909A' : (pressed ? '#E8909A' : C.btn),
             borderTopLeftRadius: 999,
             borderBottomLeftRadius: 999,
             paddingVertical: 14,
@@ -156,11 +201,15 @@ export default function RegisterHealthScreen() {
             alignItems: 'center',
           })}
         >
-          <Text className="text-white font-fuzzy-bold text-[22px] mr-2" style={{ marginTop: -4 }}>
-            →
-          </Text>
+          {isLoading ? (
+            <ActivityIndicator color="white" style={{ marginRight: 8 }} />
+          ) : (
+            <Text className="text-white font-fuzzy-bold text-[22px] mr-2" style={{ marginTop: -4 }}>
+              →
+            </Text>
+          )}
           <Text className="text-white font-fuzzy-bold text-xl">
-            Lanjutkan
+            {isLoading ? 'Menyimpan...' : 'Lanjutkan'}
           </Text>
         </Pressable>
       </View>

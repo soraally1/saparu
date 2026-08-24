@@ -2,11 +2,22 @@ import { create } from 'zustand';
 import { setItemAsync, getItemAsync, deleteItemAsync } from '@/lib/storage';
 
 interface Patient {
-  patient_id: string;
-  user_id: string;
-  child_name?: string;
-  parent_name: string;
-  // Add other fields as needed
+  id: string;               // ID dokumen firestore anak
+  parentId: string;         // UID User Firebase Auth
+  firstName: string;
+  lastName: string;
+  child_name: string;       // Hasil gabungan firstName + lastName dari Backend
+  dob: string;
+  age: number;
+  gender: 'male' | 'female';
+  height: number;
+  weight: number;
+  kondisiPernapasan: string[];
+  riwayatPernapasan: string[];
+  gejalaPemicu: string[];
+  perawatanSaatIni: string[];
+  createdAt: string;        // Format ISO Date
+  updatedAt: string;        // Format ISO Date
 }
 
 interface AuthState {

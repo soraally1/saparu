@@ -1,5 +1,6 @@
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Dimensions, Pressable, Text, View } from 'react-native';
+import { useRegistrationStore } from '@/store/useRegistrationStore';
 import { Image } from 'expo-image';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -17,6 +18,9 @@ export default function ConfirmGenderScreen() {
   const isMale = gender === 'male';
 
   const handleLanjut = () => {
+    if (gender === 'male' || gender === 'female') {
+      useRegistrationStore.getState().updateData({ gender });
+    }
     router.replace({ pathname: '/register-body', params: { gender } });
   };
 

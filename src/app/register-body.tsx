@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { useRegistrationStore } from '@/store/useRegistrationStore';
 import { useState } from 'react';
 import {
   Dimensions,
@@ -20,7 +21,32 @@ const C = {
   cardBg: '#9BCEC1',
 };
 
-function NumberStepper({ value, setValue, unit, label }: { value: number, setValue: (v: number) => void, unit: string, label: string }) {
+function NumberStepper({ value, setValue, unit, label }: { value: number, setValue: React.Dispatch<React.SetStateAction<number>>, unit: string, label: string }) {
+  const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
+
+  const startDecrement = () => {
+    setValue((v) => Math.max(0, v - 1));
+    const id = setInterval(() => {
+      setValue((v) => Math.max(0, v - 1));
+    }, 70);
+    setTimerId(id);
+  };
+
+  const startIncrement = () => {
+    setValue((v) => v + 1);
+    const id = setInterval(() => {
+      setValue((v) => v + 1);
+    }, 70);
+    setTimerId(id);
+  };
+
+  const stopTimer = () => {
+    if (timerId) {
+      clearInterval(timerId);
+      setTimerId(null);
+    }
+  };
+
   return (
     <View style={{
       backgroundColor: C.cardBg,
@@ -36,11 +62,15 @@ function NumberStepper({ value, setValue, unit, label }: { value: number, setVal
       <Text className="text-white font-fuzzy text-base flex-1">{label}</Text>
 
       <View className="flex-row items-center justify-end">
-        <Pressable onPress={() => setValue(Math.max(0, value - 1))} className="w-8 h-8 items-center justify-center">
+        <Pressable 
+          onPressIn={startDecrement} 
+          onPressOut={stopTimer} 
+          className="w-10 h-10 items-center justify-center bg-white/20 rounded-full"
+        >
           <Text className="text-white font-fuzzy-bold text-2xl" style={{ marginTop: -4 }}>-</Text>
         </Pressable>
 
-        <View className="flex-row items-baseline px-1">
+        <View className="flex-row items-baseline px-3">
           <TextInput
             value={value.toString()}
             onChangeText={(txt) => {
@@ -48,12 +78,16 @@ function NumberStepper({ value, setValue, unit, label }: { value: number, setVal
               if (!isNaN(num)) setValue(num);
             }}
             keyboardType="numeric"
-            style={{ color: 'white', fontFamily: 'FuzzyBubbles_700Bold', fontSize: 18, textAlign: 'center', minWidth: 36 }}
+            style={{ color: 'white', fontFamily: 'FuzzyBubbles_700Bold', fontSize: 22, textAlign: 'center', minWidth: 44 }}
           />
           <Text className="text-white font-fuzzy-bold text-sm">{unit}</Text>
         </View>
 
-        <Pressable onPress={() => setValue(value + 1)} className="w-8 h-8 items-center justify-center">
+        <Pressable 
+          onPressIn={startIncrement} 
+          onPressOut={stopTimer} 
+          className="w-10 h-10 items-center justify-center bg-white/20 rounded-full"
+        >
           <Text className="text-white font-fuzzy-bold text-2xl" style={{ marginTop: -2 }}>+</Text>
         </Pressable>
       </View>
@@ -67,6 +101,7 @@ export default function RegisterBodyScreen() {
   const [weight, setWeight] = useState(45);
 
   const handleLanjut = () => {
+    useRegistrationStore.getState().updateData({ height, weight });
     router.replace('/register-health');
   };
 

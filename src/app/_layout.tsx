@@ -44,9 +44,21 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isReady || !fontsLoaded) return;
 
-    const inAuthGroup = segments[0] === 'login' || segments[0] === 'register';
+    // Define auth-related screens that logged-in users shouldn't see
+    const inAuthGroup = [
+      'login', 'register', 'register-name', 'pilih-gender', 
+      'confirm-gender', 'register-body', 'register-health', 'welcome'
+    ].includes(segments[0]);
+    
+    // Define protected screens that unauthenticated users shouldn't see
+    const isProtected = segments[0] === 'dashboard';
 
     if (token && inAuthGroup) {
+      // If user is logged in and trying to access an auth screen, redirect to dashboard
+      router.replace('/dashboard');
+    } else if (!token && isProtected) {
+      // If user is not logged in and trying to access a protected screen, redirect to login
+      router.replace('/login');
     }
   }, [token, isReady, fontsLoaded, segments]);
 

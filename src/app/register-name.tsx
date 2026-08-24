@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
+import { useRegistrationStore } from '@/store/useRegistrationStore';
 import { useState } from 'react';
 import {
   Dimensions,
@@ -50,6 +51,12 @@ export default function RegisterNameScreen() {
   const [age, setAge] = useState('');
 
   const handleLanjut = () => {
+    useRegistrationStore.getState().updateData({
+      firstName,
+      lastName,
+      dob,
+      age: parseInt(age, 10) || 0,
+    });
     router.replace('/pilih-gender');
   };
 
@@ -134,7 +141,58 @@ export default function RegisterNameScreen() {
                 placeholder="HH/BB/TTTT"
                 placeholderTextColor="rgba(255,255,255,0.6)"
                 value={dob}
-                onChangeText={setDob}
+                onChangeText={(text) => {
+                  let numericText = text.replace(/\D/g, '');
+                  
+                  if (numericText.length >= 2) {
+                    let dd = parseInt(numericText.slice(0, 2), 10);
+                    if (dd > 31) dd = 31;
+                    if (dd === 0) dd = 1;
+                    numericText = dd.toString().padStart(2, '0') + numericText.slice(2);
+                  }
+                  
+                  if (numericText.length >= 4) {
+                    let mm = parseInt(numericText.slice(2, 4), 10);
+                    if (mm > 12) mm = 12;
+                    if (mm === 0) mm = 1;
+                    numericText = numericText.slice(0, 2) + mm.toString().padStart(2, '0') + numericText.slice(4);
+                  }
+
+                  let formattedDate = '';
+                  
+                  if (numericText.length <= 2) {
+                    formattedDate = numericText;
+                  } else if (numericText.length <= 4) {
+                    formattedDate = `${numericText.slice(0, 2)}/${numericText.slice(2)}`;
+                  } else {
+                    formattedDate = `${numericText.slice(0, 2)}/${numericText.slice(2, 4)}/${numericText.slice(4, 8)}`;
+                  }
+                  
+                  setDob(formattedDate);
+                  
+                  if (formattedDate.length === 10) {
+                    const parts = formattedDate.split('/');
+                    const day = parseInt(parts[0], 10);
+                    const month = parseInt(parts[1], 10) - 1;
+                    const year = parseInt(parts[2], 10);
+                    const birthDateObj = new Date(year, month, day);
+                    
+                    const today = new Date();
+                    let calculatedAge = today.getFullYear() - birthDateObj.getFullYear();
+                    const m = today.getMonth() - birthDateObj.getMonth();
+                    if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
+                      calculatedAge--;
+                    }
+                    
+                    if (!isNaN(calculatedAge) && calculatedAge >= 0 && calculatedAge < 150) {
+                      setAge(calculatedAge.toString());
+                    }
+                  } else {
+                    setAge(''); // Reset age if date is incomplete
+                  }
+                }}
+                keyboardType="numeric"
+                maxLength={10}
               />
               <CalendarIcon />
             </View>
