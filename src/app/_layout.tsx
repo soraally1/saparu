@@ -11,6 +11,9 @@ import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useAuthStore } from '@/store/useAuthStore';
 
+import { Image } from 'expo-image';
+import Animated, { FadeOut } from 'react-native-reanimated';
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -21,6 +24,7 @@ export default function RootLayout() {
 
   const { token, hydrateAuth } = useAuthStore();
   const [isReady, setIsReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const segments = useSegments();
   const router = useRouter();
 
@@ -33,10 +37,14 @@ export default function RootLayout() {
     initAuth();
   }, []);
 
-  // Hide splash screen when fonts and auth are ready
+  // Hide native splash screen when fonts and auth are ready, then fade out in-app splash
   useEffect(() => {
     if (fontsLoaded && isReady) {
       SplashScreen.hideAsync();
+      const timer = setTimeout(() => {
+        setShowSplash(false);
+      }, 1500);
+      return () => clearTimeout(timer);
     }
   }, [fontsLoaded, isReady]);
 
@@ -62,7 +70,18 @@ export default function RootLayout() {
     }
   }, [token, isReady, fontsLoaded, segments]);
 
-  if (!fontsLoaded || !isReady) return null;
+  if (!fontsLoaded || !isReady) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#9BCEC1', justifyContent: 'center', alignItems: 'center' }}>
+        <StatusBar style="dark" />
+        <Image
+          source={require('@/assets/images/splash-icon.png')}
+          style={{ width: 240, height: 190 }}
+          contentFit="contain"
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: '#9BCEC1' }}>
@@ -81,7 +100,38 @@ export default function RootLayout() {
         <Stack.Screen name="konsultasi-dokter" />
         <Stack.Screen name="dokter-list" />
         <Stack.Screen name="rute-bunda" />
+        <Stack.Screen name="jadwal-obat" />
+        <Stack.Screen name="tambah-obat" />
+        <Stack.Screen name="rekomendasi-obat-ai" />
+        <Stack.Screen name="obat" />
+        <Stack.Screen name="apotik" />
+        <Stack.Screen name="apotik-detail" />
+        <Stack.Screen name="rumah-sakit-detail" />
       </Stack>
+
+      {/* Branded Full-Screen Splash Screen Overlay */}
+      {showSplash && (
+        <Animated.View
+          exiting={FadeOut.duration(400)}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: '#9BCEC1',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 99999,
+          }}
+        >
+          <Image
+            source={require('@/assets/images/splash-icon.png')}
+            style={{ width: 240, height: 190 }}
+            contentFit="contain"
+          />
+        </Animated.View>
+      )}
     </View>
   );
 }

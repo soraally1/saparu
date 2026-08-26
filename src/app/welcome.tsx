@@ -1,6 +1,6 @@
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Pressable, Text, View, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Dimensions, Pressable, Text, View } from 'react-native';
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get('window');
 

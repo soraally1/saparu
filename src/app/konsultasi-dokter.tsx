@@ -1,6 +1,6 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
@@ -10,15 +10,9 @@ import {
   Text,
   View,
 } from 'react-native';
+import { DOCTORS_BASE, DoctorItem, useDoctorStore } from '@/store/useDoctorStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-const DOCTOR = {
-  name: 'dr. Adam, Sp.A',
-  experience: '15 Tahun\nPengalaman',
-  specialization: 'Anak\nSpesialisasi',
-  practiceHours: '09:00-20:00\nJam Praktik',
-};
 
 const TIME_SLOTS = [
   ['09:00', '10:00', '11:00', '12:00'],
@@ -110,8 +104,18 @@ function TimeSlotButton({
 
 export default function KonsultasiDokterScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const { selectedDoctor, doctors } = useDoctorStore();
   const [selectedTime, setSelectedTime] = useState<string | null>('11:00');
 
+  const doctorList = Array.isArray(doctors) && doctors.length > 0 ? doctors : DOCTORS_BASE;
+  const doctor: DoctorItem =
+    (params.id ? doctorList.find((d) => d.id === params.id) : null) ||
+    selectedDoctor ||
+    doctorList[0];
+
+  const isIwan = doctor.id === 'iwan';
+  const cleanDoctorName = doctor.name.replace(/\n/g, ' ');
   const formattedDate = `${DAY_NAMES[TODAY.getDay()]}, ${TODAY.getDate()} ${MONTH_NAMES[TODAY.getMonth()]}`;
 
   const handleReservasi = () => {
@@ -121,8 +125,8 @@ export default function KonsultasiDokterScreen() {
     }
     Alert.alert(
       'Reservasi Berhasil!',
-      `Janji temu dengan ${DOCTOR.name} pada:\n\n ${formattedDate}\n ${selectedTime}\n\nSampai jumpa, ya!`,
-      [{ text: 'Oke', style: 'default' }],
+      `Janji temu dengan ${cleanDoctorName} (${doctor.hospital}) pada:\n\n📅 ${formattedDate}\n⏰ ${selectedTime} WIB\n\nSampai jumpa, ya!`,
+      [{ text: 'Oke', style: 'default', onPress: () => router.back() }],
     );
   };
 
@@ -161,15 +165,14 @@ export default function KonsultasiDokterScreen() {
             <Ionicons name="arrow-back" size={20} color="#6CA8C2" />
           </Pressable>
 
-          {/*
-          */}
+          {/* Card Container */}
           <View
             style={{
               marginTop: IMG_OVERFLOW,
               overflow: 'visible',
             }}
           >
-            {/* Rough pink border texture – layer 1 (top-left shift) */}
+            {/* Texture layers */}
             <View
               style={{
                 position: 'absolute',
@@ -225,7 +228,7 @@ export default function KonsultasiDokterScreen() {
               <View
                 style={{
                   position: 'absolute',
-                  top: -(IMG_OVERFLOW),
+                  top: -IMG_OVERFLOW,
                   left: 0,
                   right: 0,
                   alignItems: 'center',
@@ -235,9 +238,9 @@ export default function KonsultasiDokterScreen() {
                 }}
               >
                 <Image
-                  source={require('@/assets/mascot/dr bunga 1.svg')}
+                  source={doctor.image}
                   style={{
-                    width: SCREEN_WIDTH * 0.68,
+                    width: isIwan ? SCREEN_WIDTH * 0.78 : SCREEN_WIDTH * 0.68,
                     height: '100%',
                   }}
                   contentFit="contain"
@@ -250,8 +253,8 @@ export default function KonsultasiDokterScreen() {
                   backgroundColor: '#6CA8C2',
                   borderRadius: 16,
                   paddingVertical: 12,
-                  paddingHorizontal: 0,
-                  width: '82%',
+                  paddingHorizontal: 12,
+                  width: '85%',
                   alignItems: 'center',
                   zIndex: 5,
                 }}
@@ -259,13 +262,14 @@ export default function KonsultasiDokterScreen() {
                 <Text
                   style={{
                     fontFamily: 'FuzzyBubbles_700Bold',
-                    fontSize: 19,
+                    fontSize: 17,
                     color: '#FFFFFF',
                     textAlign: 'center',
                     letterSpacing: 0.3,
                   }}
+                  numberOfLines={2}
                 >
-                  {DOCTOR.name}
+                  {cleanDoctorName}
                 </Text>
               </View>
             </View>
@@ -287,16 +291,47 @@ export default function KonsultasiDokterScreen() {
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <InfoBadge
               icon={<Feather name="briefcase" size={20} color="#FFFFFF" />}
-              label={DOCTOR.experience}
+              label={doctor.experience || '10 Tahun\nPengalaman'}
             />
             <InfoBadge
               icon={<Feather name="check-circle" size={20} color="#FFFFFF" />}
-              label={DOCTOR.specialization}
+              label={
+                doctor.specialization.includes('\n')
+                  ? doctor.specialization
+                  : `${doctor.specialization}\nSpesialisasi`
+              }
             />
             <InfoBadge
               icon={<Feather name="clock" size={20} color="#FFFFFF" />}
-              label={DOCTOR.practiceHours}
+              label={doctor.practiceHours || '09:00-20:00\nJam Praktik'}
             />
+          </View>
+
+          {/* Hospital indicator badge */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: 'rgba(255,255,255,0.75)',
+              borderRadius: 12,
+              paddingVertical: 8,
+              paddingHorizontal: 12,
+              marginTop: 12,
+              gap: 8,
+            }}
+          >
+            <Feather name="map-pin" size={16} color="#6CA8C2" />
+            <Text
+              style={{
+                fontFamily: 'FuzzyBubbles_700Bold',
+                fontSize: 12,
+                color: '#6CA8C2',
+                flex: 1,
+              }}
+              numberOfLines={1}
+            >
+              Praktik di {doctor.hospital}
+            </Text>
           </View>
         </View>
 
