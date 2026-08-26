@@ -160,17 +160,19 @@ export default function DashboardScreen() {
 
         {/* 3 Cards Section */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'flex-start', paddingHorizontal: 12, marginTop: -50, zIndex: 20 }}>
-          {/* Left Card */}
-          <View style={{ width: '30%', marginTop: 0 }}>
-            <View style={{ backgroundColor: '#6CA8C2', width: '100%', aspectRatio: 1, borderRadius: 16, padding: 10, justifyContent: 'flex-end', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, overflow: 'visible' }}>
-              <View style={{ position: 'absolute', top: -70, left: 0, right: 30, alignItems: 'center', zIndex: 10, elevation: 5 }}>
-                <Image source={require('@/assets/mascot/left.svg')} style={{ width: 155, height: 155 }} contentFit="contain" />
+          {/* Left Card — navigates to Rute Bunda */}
+          <Link href="/rute-bunda" asChild>
+            <Pressable style={{ width: '30%', marginTop: 0 }}>
+              <View style={{ backgroundColor: '#6CA8C2', width: '100%', aspectRatio: 1, borderRadius: 16, padding: 10, justifyContent: 'flex-end', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, overflow: 'visible' }}>
+                <View style={{ position: 'absolute', top: -70, left: 0, right: 30, alignItems: 'center', zIndex: 10, elevation: 5 }}>
+                  <Image source={require('@/assets/mascot/left.svg')} style={{ width: 155, height: 155 }} contentFit="contain" />
+                </View>
+                <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#FFFFFF', fontSize: 12, textAlign: 'center', paddingBottom: 10 }}>
+                  Paru Kamu!
+                </Text>
               </View>
-              <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#FFFFFF', fontSize: 12, textAlign: 'center', paddingBottom: 10 }}>
-                Paru Kamu!
-              </Text>
-            </View>
-          </View>
+            </Pressable>
+          </Link>
 
           {/* Middle Card */}
           <Link href="/scan-paru" asChild>
@@ -276,7 +278,7 @@ export default function DashboardScreen() {
 
             {/* Doctor Image */}
             <View style={{ position: 'absolute', right: -50, bottom: 85, zIndex: 10, width: 200, height: 200 }}>
-              <Image source={require('@/assets/mascot/dr.svg')} style={{ width: '100%', height: '100%' }} contentFit="contain" />
+              <Image source={require('@/assets/mascot/dr bunga 1.svg')} style={{ width: '100%', height: '100%' }} contentFit="contain" />
             </View>
 
             {/* Bottom Blue Box */}
@@ -294,6 +296,7 @@ export default function DashboardScreen() {
                 <Text style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 10, color: '#FFFFFF', maxWidth: '75%', lineHeight: 14 }}>
                   Konsultasi dengan BPJS aktif dapat diakses langsung di mobile JKN.
                 </Text>
+                <Link href="/konsultasi-dokter" asChild>
                 <Pressable
                   style={{
                     backgroundColor: '#FFFFFF',
@@ -311,6 +314,7 @@ export default function DashboardScreen() {
                   </Text>
                   <Feather name="chevron-right" size={12} color="#6CA8C2" />
                 </Pressable>
+                </Link>
               </View>
             </View>
 

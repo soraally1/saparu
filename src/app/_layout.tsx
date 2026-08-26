@@ -77,6 +77,10 @@ export default function RootLayout() {
         <Stack.Screen name="confirm-gender" />
         <Stack.Screen name="register-body" />
         <Stack.Screen name="register-health" />
+        <Stack.Screen name="dashboard" />
+        <Stack.Screen name="konsultasi-dokter" />
+        <Stack.Screen name="dokter-list" />
+        <Stack.Screen name="rute-bunda" />
       </Stack>
     </View>
   );
