@@ -1,9 +1,9 @@
 import { useAuthStore } from '@/store/useAuthStore';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { useRouter, Link } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
+import { Link, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { Dimensions, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -36,7 +36,7 @@ function DashboardSkeleton() {
     <View className="flex-1" style={{ backgroundColor: '#FDE3E7' }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         {/* Header Skeleton */}
-        <View style={{ width: SCREEN_WIDTH, aspectRatio: 370 / 380, backgroundColor: '#F4CFD6', overflow: 'hidden', paddingHorizontal: 24, paddingTop: 100 }}>
+        <View style={{ width: SCREEN_WIDTH, aspectRatio: 370 / 395, backgroundColor: '#F4CFD6', overflow: 'hidden', paddingHorizontal: 24, paddingTop: 85 }}>
           <SkeletonBlock style={{ width: 120, height: 32, marginBottom: 4 }} />
           <SkeletonBlock style={{ width: 200, height: 42, marginBottom: 12 }} />
           <SkeletonBlock style={{ width: 220, height: 48, marginBottom: 16 }} />
@@ -44,7 +44,7 @@ function DashboardSkeleton() {
         </View>
 
         {/* 3 Cards Skeleton */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'flex-start', paddingHorizontal: 12, marginTop: -50, zIndex: 20 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-evenly', alignItems: 'flex-start', paddingHorizontal: 12, marginTop: -15, zIndex: 20 }}>
           {[1, 2, 3].map(i => (
             <View key={i} style={{ width: '30%' }}>
               <SkeletonBlock style={{ width: '100%', aspectRatio: 1, borderRadius: 16 }} />
@@ -53,7 +53,7 @@ function DashboardSkeleton() {
         </View>
 
         {/* Reminder Banner Skeleton */}
-        <View style={{ marginHorizontal: 20, marginTop: 40 }}>
+        <View style={{ marginHorizontal: 20, marginTop: 35 }}>
           <SkeletonBlock style={{ width: '100%', height: 110, borderRadius: 20 }} />
         </View>
 
@@ -72,7 +72,9 @@ export default function DashboardScreen() {
   const router = useRouter();
   const patient = useAuthStore(state => state.patient);
   const logout = useAuthStore(state => state.logout);
+  const hydrateAuth = useAuthStore(state => state.hydrateAuth);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     // Simulate loading data
@@ -82,19 +84,44 @@ export default function DashboardScreen() {
     return () => clearTimeout(timer);
   }, []);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await hydrateAuth();
+    } catch (e) {
+      console.error('Refresh error:', e);
+    } finally {
+      setTimeout(() => {
+        setRefreshing(false);
+      }, 600);
+    }
+  }, [hydrateAuth]);
+
   if (isLoading) {
     return <DashboardSkeleton />;
   }
 
   return (
     <View className="flex-1" style={{ backgroundColor: '#FDE3E7' }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#6CA8C2', '#FFAE9D']}
+            tintColor="#6CA8C2"
+            progressBackgroundColor="#FFFFFF"
+          />
+        }
+      >
 
         {/* Header Section */}
-        <View style={{ width: SCREEN_WIDTH, aspectRatio: 370 / 380, overflow: 'hidden' }}>
+        <View style={{ width: SCREEN_WIDTH, aspectRatio: 370 / 395, overflow: 'hidden' }}>
           <Image
             source={require('@/assets/mascot/ImgBG.svg')}
-            style={{ width: '120%', height: '100%', position: 'absolute', top: -20, left: -25, transform: [{ translateX: 25 }] }}
+            style={{ width: '125%', height: '100%', position: 'absolute', top: 0, left: -25, transform: [{ translateX: 25 }] }}
             contentFit="cover"
           />
 
@@ -119,7 +146,7 @@ export default function DashboardScreen() {
               <Ionicons name="log-out-outline" size={24} color="#FF6B6B" />
             </Pressable>
           </View>
-          <View style={{ paddingHorizontal: 24, paddingTop: 100 }}>
+          <View style={{ paddingHorizontal: 24, paddingTop: 85 }}>
             <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', fontSize: 28, color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.6)', textShadowOffset: { width: 1, height: 2 }, textShadowRadius: 4 }}>
               Halo bunda,
             </Text>
@@ -132,7 +159,7 @@ export default function DashboardScreen() {
 
             <Pressable
               style={{
-                marginTop: 16,
+                marginTop: 14,
                 backgroundColor: '#F0A080',
                 borderColor: '#FFFFFF',
                 borderWidth: 2,
@@ -176,10 +203,10 @@ export default function DashboardScreen() {
 
           {/* Middle Card */}
           <Link href="/scan-paru" asChild>
-            <Pressable style={{ width: '30%', marginTop: 0 }}>
+            <Pressable style={{ width: '30%', marginTop: -20 }}>
               <View style={{ backgroundColor: '#6CA8C2', width: '100%', aspectRatio: 1, borderRadius: 16, padding: 8, justifyContent: 'flex-end', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, overflow: 'visible' }}>
-                <View style={{ position: 'absolute', top: -80, left: 0, right: 0, alignItems: 'center', zIndex: 10, elevation: 5 }}>
-                  <Image source={require('@/assets/images/axolot.svg')} style={{ width: 105, height: 105 }} contentFit="contain" />
+                <View style={{ position: 'absolute', top: -75, left: 0, right: 0, alignItems: 'center', zIndex: 10, elevation: 5 }}>
+                  <Image source={require('@/assets/images/axolot.svg')} style={{ width: 100, height: 100 }} contentFit="contain" />
                 </View>
                 <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#FFFFFF', fontSize: 12, textAlign: 'center', paddingBottom: 10 }}>
                   Cek Kesehatan{'\n'}Paru Kamu!
@@ -189,20 +216,22 @@ export default function DashboardScreen() {
           </Link>
 
           {/* Right Card */}
-          <View style={{ width: '30%', marginTop: 0 }}>
-            <View style={{ backgroundColor: '#6CA8C2', width: '100%', aspectRatio: 1, borderRadius: 16, padding: 10, justifyContent: 'flex-end', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, overflow: 'visible' }}>
-              <View style={{ position: 'absolute', top: -70, left: 30, right: 0, alignItems: 'center', zIndex: 10, elevation: 5 }}>
-                <Image source={require('@/assets/mascot/right.svg')} style={{ width: 155, height: 155 }} contentFit="contain" />
+          <Link href="/scan-roentgen" asChild>
+            <Pressable style={{ width: '30%', marginTop: -20 }}>
+              <View style={{ backgroundColor: '#6CA8C2', width: '100%', aspectRatio: 1, borderRadius: 16, padding: 10, justifyContent: 'flex-end', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4, overflow: 'visible' }}>
+                <View style={{ position: 'absolute', top: -65, left: 25, right: 0, alignItems: 'center', zIndex: 10, elevation: 5 }}>
+                  <Image source={require('@/assets/mascot/right.svg')} style={{ width: 145, height: 145 }} contentFit="contain" />
+                </View>
+                <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#FFFFFF', fontSize: 12, textAlign: 'center', paddingBottom: 10 }}>
+                  Scan Roentgen
+                </Text>
               </View>
-              <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#FFFFFF', fontSize: 12, textAlign: 'center', paddingBottom: 10 }}>
-                Paru Kamu!
-              </Text>
-            </View>
-          </View>
+            </Pressable>
+          </Link>
         </View>
 
         {/* Reminder Banner */}
-        <View style={{ marginHorizontal: 20, marginTop: 40, backgroundColor: '#F0A080', borderRadius: 20, flexDirection: 'row', alignItems: 'center', paddingRight: 20, elevation: 4, overflow: 'hidden' }}>
+        <View style={{ marginHorizontal: 20, marginTop: 35, backgroundColor: '#F0A080', borderRadius: 20, flexDirection: 'row', alignItems: 'center', paddingRight: 20, elevation: 4, overflow: 'hidden' }}>
 
           {/* Mascot */}
           <View style={{ position: 'absolute', left: -10, top: 0, bottom: 0, zIndex: 5, elevation: 5, width: 150 }}>
@@ -297,23 +326,23 @@ export default function DashboardScreen() {
                   Konsultasi dengan BPJS aktif dapat diakses langsung di mobile JKN.
                 </Text>
                 <Link href="/konsultasi-dokter" asChild>
-                <Pressable
-                  style={{
-                    backgroundColor: '#FFFFFF',
-                    borderRadius: 999,
-                    paddingVertical: 6,
-                    paddingHorizontal: 12,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 4,
-                    elevation: 2,
-                  }}
-                >
-                  <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#6CA8C2', fontSize: 10 }}>
-                    Detail
-                  </Text>
-                  <Feather name="chevron-right" size={12} color="#6CA8C2" />
-                </Pressable>
+                  <Pressable
+                    style={{
+                      backgroundColor: '#FFFFFF',
+                      borderRadius: 999,
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      elevation: 2,
+                    }}
+                  >
+                    <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#6CA8C2', fontSize: 10 }}>
+                      Detail
+                    </Text>
+                    <Feather name="chevron-right" size={12} color="#6CA8C2" />
+                  </Pressable>
                 </Link>
               </View>
             </View>

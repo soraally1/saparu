@@ -14,6 +14,7 @@ import {
   TextInput,
   View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { SlideInDown, SlideOutDown, useAnimatedStyle, withSpring, useSharedValue } from 'react-native-reanimated';
 import Svg, { G, Path } from 'react-native-svg';
 
@@ -30,10 +31,9 @@ const C = {
   btn: '#F0A080',
 };
 
-
-
 export default function RegisterScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [isVisible, setIsVisible] = useState(true);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -112,15 +112,14 @@ export default function RegisterScreen() {
 
               {/* Card */}
               <View
-                className="w-full bg-saparu-card items-center "
+                className="w-full bg-saparu-card items-center"
                 style={{
                   borderTopLeftRadius: 50,
                   borderTopRightRadius: 50,
                   paddingHorizontal: 28,
                   paddingTop: 44,
                   marginTop: -10,
-                  paddingBottom: 28,
-
+                  paddingBottom: Math.max(insets.bottom + 28, 56),
                 }}>
 
                 <Text className="text-saparu-deep text-center mb-[2px] font-fuzzy-bold text-[22px]">
@@ -246,12 +245,12 @@ export default function RegisterScreen() {
                 </Pressable>
 
                 {/* Login Link */}
-                <View className="items-center gap-[2px]">
+                <View className="items-center gap-[4px] mt-1 mb-2">
                   <Text className="text-saparu-muted font-fuzzy text-[13px]">
                     Already have account?
                   </Text>
-                  <Pressable onPress={handleNavigateLogin} disabled={isLoading}>
-                    <Text className="text-saparu-rose font-fuzzy-bold text-[13px]">
+                  <Pressable onPress={handleNavigateLogin} disabled={isLoading} hitSlop={12} className="py-1 px-3">
+                    <Text className="text-saparu-rose font-fuzzy-bold text-[14px]">
                       Login Here
                     </Text>
                   </Pressable>

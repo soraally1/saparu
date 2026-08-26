@@ -27,13 +27,14 @@ const C = {
 };
 
 
-// ─── Screen ───────────────────────────────────────────────────
 import api from '@/lib/axios';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ActivityIndicator, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [isVisible, setIsVisible] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -109,7 +110,7 @@ export default function LoginScreen() {
                   paddingHorizontal: 28,
                   paddingTop: 44,
                   marginTop: -10,
-                  paddingBottom: 28,
+                  paddingBottom: Math.max(insets.bottom + 28, 56),
                 }}>
 
         {/* Title */}
@@ -205,12 +206,12 @@ export default function LoginScreen() {
                 </Pressable>
 
                 {/* Sign Up Link */}
-                <View className="items-center gap-[2px]">
+                <View className="items-center gap-[4px] mt-1 mb-2">
                   <Text className="text-saparu-muted font-fuzzy text-[13px]">
                     Didn't have an account?
                   </Text>
-                  <Pressable onPress={handleNavigateRegister} disabled={isLoading}>
-                    <Text className="text-saparu-rose font-fuzzy-bold text-[13px]">
+                  <Pressable onPress={handleNavigateRegister} disabled={isLoading} hitSlop={12} className="py-1 px-3">
+                    <Text className="text-saparu-rose font-fuzzy-bold text-[14px]">
                       Sign Up
                     </Text>
                   </Pressable>

@@ -22,7 +22,7 @@ const C = {
 };
 
 function NumberStepper({ value, setValue, unit, label }: { value: number, setValue: React.Dispatch<React.SetStateAction<number>>, unit: string, label: string }) {
-  const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
+  const [timerId, setTimerId] = useState<ReturnType<typeof setInterval> | null>(null);
 
   const startDecrement = () => {
     setValue((v) => Math.max(0, v - 1));
