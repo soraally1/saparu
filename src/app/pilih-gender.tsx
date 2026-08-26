@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Dimensions, Pressable, View } from 'react-native';
+import { Dimensions, GestureResponderEvent, Pressable, View } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -17,6 +17,23 @@ export default function PilihGenderScreen() {
 
   const canvasW = CHAR_SIZE + OVERLAP_X;
   const canvasH = CHAR_SIZE + OVERLAP_Y;
+
+  const handleCanvasPress = (evt: GestureResponderEvent) => {
+    const { locationX, locationY } = evt.nativeEvent;
+
+    // Female character center is at top-left (~39% X, ~37.5% Y)
+    // Male character center is at bottom-right (~60.5% X, ~65% Y)
+    const femaleDx = locationX - 0.39 * canvasW;
+    const femaleDy = locationY - 0.375 * canvasH;
+    const distFemaleSq = femaleDx * femaleDx + femaleDy * femaleDy;
+
+    const maleDx = locationX - 0.605 * canvasW;
+    const maleDy = locationY - 0.65 * canvasH;
+    const distMaleSq = maleDx * maleDx + maleDy * maleDy;
+
+    const gender = distFemaleSq <= distMaleSq ? 'female' : 'male';
+    router.push({ pathname: '/confirm-gender', params: { gender } });
+  };
 
   return (
     <View
@@ -39,63 +56,57 @@ export default function PilihGenderScreen() {
           contentFit="contain"
         />
       </View>
-      <View style={{ width: canvasW, height: canvasH, marginBottom: 36 }}>
-        {/* Female Character */}
-        <Pressable
-          onPress={() => router.push({ pathname: '/confirm-gender', params: { gender: 'female' } })}
+
+      <Pressable
+        onPress={handleCanvasPress}
+        style={({ pressed }) => ({
+          width: canvasW,
+          height: canvasH,
+          marginBottom: 36,
+          opacity: pressed ? 0.92 : 1,
+        })}
+      >
+        {/* Female Character (Top-Left) */}
+        <View
+          pointerEvents="none"
           style={{
             position: 'absolute',
             top: 0,
             left: 0,
             width: CHAR_SIZE,
             height: CHAR_SIZE,
-            zIndex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <View
-            style={{
-              width: CHAR_SIZE,
-              height: CHAR_SIZE,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Image
-              source={require('@/assets/images/female.svg')}
-              style={{ width: CHAR_SIZE, height: CHAR_SIZE }}
-              contentFit="contain"
-            />
-          </View>
-        </Pressable>
+          <Image
+            source={require('@/assets/images/female.svg')}
+            style={{ width: CHAR_SIZE, height: CHAR_SIZE }}
+            contentFit="contain"
+          />
+        </View>
 
-        {/* Male Character */}
-        <Pressable
-          onPress={() => router.push({ pathname: '/confirm-gender', params: { gender: 'male' } })}
+        {/* Male Character (Bottom-Right) */}
+        <View
+          pointerEvents="none"
           style={{
             position: 'absolute',
             bottom: 0,
             right: 0,
             width: CHAR_SIZE,
             height: CHAR_SIZE,
-            zIndex: 2,
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <View
-            style={{
-              width: CHAR_SIZE,
-              height: CHAR_SIZE,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Image
-              source={require('@/assets/images/male.svg')}
-              style={{ width: CHAR_SIZE, height: CHAR_SIZE }}
-              contentFit="contain"
-            />
-          </View>
-        </Pressable>
-      </View>
+          <Image
+            source={require('@/assets/images/male.svg')}
+            style={{ width: CHAR_SIZE, height: CHAR_SIZE }}
+            contentFit="contain"
+          />
+        </View>
+      </Pressable>
     </View>
   );
 }
+
