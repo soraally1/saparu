@@ -1,16 +1,18 @@
-import { Feather, Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
   Dimensions,
+  Modal,
   Pressable,
   ScrollView,
   Text,
   View,
 } from 'react-native';
 import { DOCTORS_BASE, DoctorItem, useDoctorStore } from '@/store/useDoctorStore';
+import { scheduleDoctorReservationNotification } from '@/utils/notificationService';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -107,6 +109,7 @@ export default function KonsultasiDokterScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const { selectedDoctor, doctors } = useDoctorStore();
   const [selectedTime, setSelectedTime] = useState<string | null>('11:00');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const doctorList = Array.isArray(doctors) && doctors.length > 0 ? doctors : DOCTORS_BASE;
   const doctor: DoctorItem =
@@ -118,16 +121,22 @@ export default function KonsultasiDokterScreen() {
   const cleanDoctorName = doctor.name.replace(/\n/g, ' ');
   const formattedDate = `${DAY_NAMES[TODAY.getDay()]}, ${TODAY.getDate()} ${MONTH_NAMES[TODAY.getMonth()]}`;
 
-  const handleReservasi = () => {
+  const handleReservasi = async () => {
     if (!selectedTime) {
       Alert.alert('Pilih Waktu', 'Silakan pilih waktu konsultasi terlebih dahulu.');
       return;
     }
-    Alert.alert(
-      'Reservasi Berhasil!',
-      `Janji temu dengan ${cleanDoctorName} (${doctor.hospital}) pada:\n\n📅 ${formattedDate}\n⏰ ${selectedTime} WIB\n\nSampai jumpa, ya!`,
-      [{ text: 'Oke', style: 'default', onPress: () => router.back() }],
-    );
+
+    // Schedule notification for the appointment
+    await scheduleDoctorReservationNotification({
+      doctorName: cleanDoctorName,
+      hospital: doctor.hospital,
+      dateStr: formattedDate,
+      timeStr: selectedTime,
+    });
+
+    // Show custom Pop-up confirmation modal
+    setShowSuccessModal(true);
   };
 
   return (
@@ -436,8 +445,300 @@ export default function KonsultasiDokterScreen() {
             </View>
           </View>
         </View>
-
       </ScrollView>
+
+      {/* Reservation Success Pop-up Modal */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={showSuccessModal}
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 24,
+            zIndex: 9999,
+          }}
+        >
+          <View
+            style={{
+              width: '100%',
+              maxWidth: 360,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 28,
+              padding: 24,
+              alignItems: 'center',
+              elevation: 8,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.2,
+              shadowRadius: 10,
+            }}
+          >
+            {/* Top Icon Badge */}
+            <View
+              style={{
+                width: 68,
+                height: 68,
+                borderRadius: 34,
+                backgroundColor: '#6CA8C2',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: -48,
+                marginBottom: 14,
+                elevation: 4,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+              }}
+            >
+              <Feather name="check" size={36} color="#FFFFFF" />
+            </View>
+
+            <Text
+              style={{
+                fontFamily: 'FuzzyBubbles_700Bold',
+                fontSize: 20,
+                color: '#3D7371',
+                marginBottom: 6,
+                textAlign: 'center',
+              }}
+            >
+              Reservasi Berhasil! 🎉
+            </Text>
+            <Text
+              style={{
+                fontFamily: 'FuzzyBubbles_400Regular',
+                fontSize: 13,
+                color: '#777',
+                textAlign: 'center',
+                lineHeight: 18,
+                marginBottom: 18,
+              }}
+            >
+              Janji temu konsultasi dokter Anda telah berhasil dijadwalkan.
+            </Text>
+
+            {/* Details Box */}
+            <View
+              style={{
+                width: '100%',
+                backgroundColor: '#F8FBFA',
+                borderRadius: 20,
+                padding: 16,
+                borderWidth: 1.5,
+                borderColor: '#E8F1F5',
+                marginBottom: 16,
+                gap: 10,
+              }}
+            >
+              {/* Doctor Row */}
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: '#FFE5E5',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 10,
+                  }}
+                >
+                  <MaterialCommunityIcons name="doctor" size={20} color="#F0A080" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: 'FuzzyBubbles_700Bold',
+                      fontSize: 14,
+                      color: '#333',
+                    }}
+                    numberOfLines={1}
+                  >
+                    {cleanDoctorName}
+                  </Text>
+                  <Text
+                    style={{
+                      fontFamily: 'FuzzyBubbles_400Regular',
+                      fontSize: 12,
+                      color: '#666',
+                    }}
+                  >
+                    {doctor.specialization}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Hospital Row */}
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: '#E8F1F5',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 10,
+                  }}
+                >
+                  <MaterialCommunityIcons name="hospital-building" size={20} color="#6CA8C2" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={{
+                      fontFamily: 'FuzzyBubbles_400Regular',
+                      fontSize: 12,
+                      color: '#555',
+                    }}
+                    numberOfLines={1}
+                  >
+                    {doctor.hospital}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Date & Time Row */}
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: 14,
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderWidth: 1,
+                  borderColor: '#E8F1F5',
+                }}
+              >
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Feather name="calendar" size={14} color="#6CA8C2" style={{ marginRight: 6 }} />
+                  <Text
+                    style={{
+                      fontFamily: 'FuzzyBubbles_700Bold',
+                      fontSize: 12,
+                      color: '#3D7371',
+                    }}
+                  >
+                    {formattedDate}
+                  </Text>
+                </View>
+
+                <View
+                  style={{
+                    backgroundColor: '#FFB6A6',
+                    paddingHorizontal: 10,
+                    paddingVertical: 3,
+                    borderRadius: 10,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: 'FuzzyBubbles_700Bold',
+                      fontSize: 12,
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    {selectedTime} WIB
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Notification Activated Strip */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#E8F5E9',
+                borderRadius: 14,
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                marginBottom: 20,
+                width: '100%',
+              }}
+            >
+              <MaterialCommunityIcons name="bell-ring-outline" size={18} color="#2E7D32" style={{ marginRight: 8 }} />
+              <Text
+                style={{
+                  fontFamily: 'FuzzyBubbles_400Regular',
+                  fontSize: 11,
+                  color: '#2E7D32',
+                  flex: 1,
+                  lineHeight: 15,
+                }}
+              >
+                Notifikasi pengingat otomatis akan muncul saat jam janji temu tiba.
+              </Text>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={{ flexDirection: 'row', gap: 10, width: '100%' }}>
+              <Pressable
+                style={{
+                  flex: 1,
+                  backgroundColor: '#F0F4F6',
+                  paddingVertical: 14,
+                  borderRadius: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onPress={() => {
+                  setShowSuccessModal(false);
+                  router.back();
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: 'FuzzyBubbles_700Bold',
+                    fontSize: 13,
+                    color: '#6CA8C2',
+                  }}
+                >
+                  Selesai
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={{
+                  flex: 1.3,
+                  backgroundColor: '#FFAE9D',
+                  paddingVertical: 14,
+                  borderRadius: 20,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  elevation: 3,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 3,
+                }}
+                onPress={() => {
+                  setShowSuccessModal(false);
+                  router.replace('/jadwal-obat');
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: 'FuzzyBubbles_700Bold',
+                    fontSize: 13,
+                    color: '#FFFFFF',
+                  }}
+                >
+                  Lihat Jadwal
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

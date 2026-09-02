@@ -58,9 +58,14 @@ function DashboardSkeleton() {
         </View>
 
         {/* Doctor Section Skeleton */}
-        <View style={{ marginHorizontal: 20, marginTop: 40 }}>
-          <SkeletonBlock style={{ width: 160, height: 26, marginBottom: 4 }} />
-          <SkeletonBlock style={{ width: 200, height: 18, marginBottom: 20 }} />
+        <View style={{ marginHorizontal: 20, marginTop: 35, marginBottom: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flex: 1 }}>
+            <SkeletonBlock style={{ width: 160, height: 22, marginBottom: 4 }} />
+            <SkeletonBlock style={{ width: 180, height: 16 }} />
+          </View>
+          <SkeletonBlock style={{ width: 100, height: 28, borderRadius: 999 }} />
+        </View>
+        <View style={{ marginHorizontal: 20, marginTop: 0 }}>
           <SkeletonBlock style={{ width: '100%', height: 190, borderRadius: 20 }} />
         </View>
       </ScrollView>
@@ -157,31 +162,33 @@ export default function DashboardScreen() {
               Bagaimana kondisi ananda hari ini?
             </Text>
 
-            <Pressable
-              style={{
-                marginTop: 14,
-                backgroundColor: '#F0A080',
-                borderColor: '#FFFFFF',
-                borderWidth: 2,
-                borderRadius: 999,
-                paddingVertical: 8,
-                paddingHorizontal: 20,
-                alignSelf: 'flex-start',
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 6,
-                elevation: 4,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.25,
-                shadowRadius: 4,
-              }}
-            >
-              <Feather name="activity" size={16} color="#FFFFFF" />
-              <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#FFFFFF', fontSize: 14 }}>
-                Cek Kondisi
-              </Text>
-            </Pressable>
+            <Link href="/scan-paru" asChild>
+              <Pressable
+                style={{
+                  marginTop: 14,
+                  backgroundColor: '#F0A080',
+                  borderColor: '#FFFFFF',
+                  borderWidth: 2,
+                  borderRadius: 999,
+                  paddingVertical: 8,
+                  paddingHorizontal: 20,
+                  alignSelf: 'flex-start',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  elevation: 4,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 4,
+                }}
+              >
+                <Feather name="activity" size={16} color="#FFFFFF" />
+                <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#FFFFFF', fontSize: 14 }}>
+                  Cek Kondisi
+                </Text>
+              </Pressable>
+            </Link>
           </View>
         </View>
 
@@ -287,12 +294,12 @@ export default function DashboardScreen() {
         </View>
 
         {/* Doctor Section Header */}
-        <View style={{ marginHorizontal: 20, marginTop: 40, marginBottom: -35, zIndex: 30, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View>
+        <View style={{ marginHorizontal: 20, marginTop: 35, marginBottom: 14, zIndex: 50, elevation: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flex: 1, paddingRight: 10 }}>
             <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', fontSize: 20, color: '#6CA8C2', marginBottom: 2 }}>
               Butuh Konsultasi?
             </Text>
-            <Text style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14, color: '#6CA8C2' }}>
+            <Text style={{ fontFamily: 'FuzzyBubbles_400Regular', fontSize: 14, color: '#6CA8C2' }} numberOfLines={1}>
               "Cari dokter terdekat nya!"
             </Text>
           </View>
@@ -313,6 +320,7 @@ export default function DashboardScreen() {
                 shadowOffset: { width: 0, height: 1 },
                 shadowOpacity: 0.12,
                 shadowRadius: 2,
+                flexShrink: 0,
               }}
             >
               <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#6CA8C2', fontSize: 11 }}>
@@ -324,7 +332,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Doctor Card */}
-        <View style={{ marginHorizontal: 20, marginTop: 50 }}>
+        <View style={{ marginHorizontal: 20, marginTop: 0 }}>
           <View style={{ backgroundColor: '#9BCEC1', borderRadius: 20, padding: 16, paddingTop: 16, elevation: 4, overflow: 'visible' }}>
 
             {/* Top Text Content */}

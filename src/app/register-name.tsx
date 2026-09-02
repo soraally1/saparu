@@ -49,18 +49,45 @@ export default function RegisterNameScreen() {
   const [lastName, setLastName] = useState('');
   const [dob, setDob] = useState('');
   const [age, setAge] = useState('');
+  const [isAutoCalculated, setIsAutoCalculated] = useState(false);
+
+  const calculateAge = (dobText: string) => {
+    if (dobText.length === 10) {
+      const parts = dobText.split('/');
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+
+      if (day > 0 && day <= 31 && month >= 0 && month <= 11 && year >= 1900 && year <= new Date().getFullYear()) {
+        const birthDateObj = new Date(year, month, day);
+        const today = new Date();
+        
+        let calculatedAge = today.getFullYear() - birthDateObj.getFullYear();
+        const m = today.getMonth() - birthDateObj.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
+          calculatedAge--;
+        }
+
+        if (!isNaN(calculatedAge) && calculatedAge >= 0 && calculatedAge < 150) {
+          setAge(calculatedAge.toString());
+          setIsAutoCalculated(true);
+          return;
+        }
+      }
+    }
+  };
 
   const handleLanjut = () => {
     useRegistrationStore.getState().updateData({
-      firstName,
-      lastName,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
       dob,
-      age: parseInt(age, 10) || 0,
+      age: parseInt(age, 10) >= 0 ? parseInt(age, 10) : 0,
     });
     router.replace('/pilih-gender');
   };
 
-  const isFormValid = firstName && lastName && dob && age;
+  const isFormValid = Boolean(firstName.trim() && lastName.trim() && dob.length === 10 && age !== '');
 
   return (
     <KeyboardAvoidingView
@@ -169,27 +196,7 @@ export default function RegisterNameScreen() {
                   }
                   
                   setDob(formattedDate);
-                  
-                  if (formattedDate.length === 10) {
-                    const parts = formattedDate.split('/');
-                    const day = parseInt(parts[0], 10);
-                    const month = parseInt(parts[1], 10) - 1;
-                    const year = parseInt(parts[2], 10);
-                    const birthDateObj = new Date(year, month, day);
-                    
-                    const today = new Date();
-                    let calculatedAge = today.getFullYear() - birthDateObj.getFullYear();
-                    const m = today.getMonth() - birthDateObj.getMonth();
-                    if (m < 0 || (m === 0 && today.getDate() < birthDateObj.getDate())) {
-                      calculatedAge--;
-                    }
-                    
-                    if (!isNaN(calculatedAge) && calculatedAge >= 0 && calculatedAge < 150) {
-                      setAge(calculatedAge.toString());
-                    }
-                  } else {
-                    setAge(''); // Reset age if date is incomplete
-                  }
+                  calculateAge(formattedDate);
                 }}
                 keyboardType="numeric"
                 maxLength={10}
@@ -197,16 +204,37 @@ export default function RegisterNameScreen() {
               <CalendarIcon />
             </View>
           </View>
+          
+          {/* Usia Field with Auto-Calculate Indicator */}
           <View className="mb-6 flex-row items-center justify-between">
-            <Text className="text-white font-fuzzy text-sm flex-1">Usia</Text>
-            <TextInput
-              style={{ color: 'white', fontFamily: 'FuzzyBubbles_700Bold', fontSize: 14, textAlign: 'right', flex: 1, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.4)', paddingBottom: 4 }}
-              placeholder="Misal: 8"
-              placeholderTextColor="rgba(255,255,255,0.6)"
-              value={age}
-              onChangeText={setAge}
-              keyboardType="numeric"
-            />
+            <View className="flex-1">
+              <Text className="text-white font-fuzzy text-sm">Usia</Text>
+              {isAutoCalculated && age !== '' && (
+                <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 10, fontFamily: 'FuzzyBubbles_400Regular', marginTop: 2 }}>
+                  ✨ Dihitung otomatis
+                </Text>
+              )}
+            </View>
+            <View className="flex-row items-center justify-end flex-1" style={{ borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.4)', paddingBottom: 4 }}>
+              <TextInput
+                style={{ color: 'white', fontFamily: 'FuzzyBubbles_700Bold', fontSize: 14, textAlign: 'right', flex: 1 }}
+                placeholder="Misal: 8"
+                placeholderTextColor="rgba(255,255,255,0.6)"
+                value={age}
+                onChangeText={(text) => {
+                  const cleaned = text.replace(/\D/g, '');
+                  setAge(cleaned);
+                  setIsAutoCalculated(false);
+                }}
+                keyboardType="numeric"
+                maxLength={3}
+              />
+              {age !== '' && (
+                <Text style={{ color: 'white', fontFamily: 'FuzzyBubbles_700Bold', fontSize: 13, marginLeft: 4 }}>
+                  Tahun
+                </Text>
+              )}
+            </View>
           </View>
 
           {/* Lanjutkan Button */}

@@ -117,12 +117,13 @@ export default function ApotikScreen() {
               </Text>
             </View>
 
-            {/* Illustration */}
-            <View className="w-full h-36 bg-[#F7FBFA] rounded-2xl items-center justify-center mb-3 overflow-hidden">
+            {/* Pharmacy Image */}
+            <View className="w-full h-40 bg-[#F0F7F6] rounded-2xl mb-3 overflow-hidden">
               <Image
                 source={item.imageSource}
-                style={{ width: '90%', height: '90%' }}
-                contentFit="contain"
+                style={{ width: '100%', height: '100%' }}
+                contentFit="cover"
+                contentPosition="center"
               />
             </View>
 

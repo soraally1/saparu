@@ -16,8 +16,27 @@ export interface ApotikItem {
     id: string;
     name: string;
     type: string;
-    imageUrl: string;
+    imageSource?: any;
+    imageUrl?: string;
   }[];
+}
+
+export function getMedicineImageSource(med: { name?: string; imageSource?: any; imageUrl?: string }) {
+  if (med.imageSource) return med.imageSource;
+  const nameLower = (med.name || '').toLowerCase();
+  if (nameLower.includes('inhaler') || nameLower.includes('ventolin')) {
+    return require('@/assets/images/ventolin_inhaler.jpg');
+  }
+  if (nameLower.includes('sirup') || nameLower.includes('syrup') || nameLower.includes('profilas')) {
+    return require('@/assets/images/profilas_sirup.jpg');
+  }
+  if (nameLower.includes('tablet') || nameLower.includes('salbutamol')) {
+    return require('@/assets/images/salbutamol_tablet.jpg');
+  }
+  if (med.imageUrl) {
+    return { uri: med.imageUrl };
+  }
+  return require('@/assets/images/ventolin_inhaler.jpg');
 }
 
 export const APOTIK_BASE_DATA: ApotikItem[] = [
@@ -36,22 +55,19 @@ export const APOTIK_BASE_DATA: ApotikItem[] = [
         id: 'm1',
         name: 'Ventolin Inhaler',
         type: 'Salbutamol 100mcg',
-        imageUrl:
-          'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&auto=format&fit=crop&q=80',
+        imageSource: require('@/assets/images/ventolin_inhaler.jpg'),
       },
       {
         id: 'm2',
         name: 'Profilas Sirup',
         type: 'Ketotifen 1mg/5ml',
-        imageUrl:
-          'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=400&auto=format&fit=crop&q=80',
+        imageSource: require('@/assets/images/profilas_sirup.jpg'),
       },
       {
         id: 'm3',
         name: 'Salbutamol Tablet',
         type: 'Tablet 4mg',
-        imageUrl:
-          'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=400&auto=format&fit=crop&q=80',
+        imageSource: require('@/assets/images/salbutamol_tablet.jpg'),
       },
     ],
   },
@@ -70,15 +86,13 @@ export const APOTIK_BASE_DATA: ApotikItem[] = [
         id: 'm1',
         name: 'Ventolin Inhaler',
         type: 'Salbutamol 100mcg',
-        imageUrl:
-          'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&auto=format&fit=crop&q=80',
+        imageSource: require('@/assets/images/ventolin_inhaler.jpg'),
       },
       {
         id: 'm2',
         name: 'Profilas Sirup',
         type: 'Ketotifen 1mg/5ml',
-        imageUrl:
-          'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=400&auto=format&fit=crop&q=80',
+        imageSource: require('@/assets/images/profilas_sirup.jpg'),
       },
     ],
   },
@@ -97,15 +111,13 @@ export const APOTIK_BASE_DATA: ApotikItem[] = [
         id: 'm1',
         name: 'Ventolin Inhaler',
         type: 'Salbutamol 100mcg',
-        imageUrl:
-          'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&auto=format&fit=crop&q=80',
+        imageSource: require('@/assets/images/ventolin_inhaler.jpg'),
       },
       {
         id: 'm3',
         name: 'Salbutamol Tablet',
         type: 'Tablet 4mg',
-        imageUrl:
-          'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=400&auto=format&fit=crop&q=80',
+        imageSource: require('@/assets/images/salbutamol_tablet.jpg'),
       },
     ],
   },
@@ -124,15 +136,13 @@ export const APOTIK_BASE_DATA: ApotikItem[] = [
         id: 'm2',
         name: 'Profilas Sirup',
         type: 'Ketotifen 1mg/5ml',
-        imageUrl:
-          'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=400&auto=format&fit=crop&q=80',
+        imageSource: require('@/assets/images/profilas_sirup.jpg'),
       },
       {
         id: 'm3',
         name: 'Salbutamol Tablet',
         type: 'Tablet 4mg',
-        imageUrl:
-          'https://images.unsplash.com/photo-1585435557343-3b092031a831?w=400&auto=format&fit=crop&q=80',
+        imageSource: require('@/assets/images/salbutamol_tablet.jpg'),
       },
     ],
   },

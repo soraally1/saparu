@@ -1,41 +1,40 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useParuStore } from '@/store/useParuStore';
 import {
-  View,
-  Text,
-  Pressable,
-  StyleSheet,
-  Alert,
-  Dimensions,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import {
-  useAudioStream,
-  requestRecordingPermissionsAsync,
-  setAudioModeAsync,
-} from 'expo-audio';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  Easing,
-  withSequence,
-} from 'react-native-reanimated';
-import {
+  ApiPredictionResult,
   predictRespiratorySound,
   saveWavFileFromPcm,
-  ApiPredictionResult,
   TargetModel,
 } from '@/utils/api';
 import { analyzeParuSoundResult, ParuAnalysisResult } from '@/utils/paruApi';
-import { useParuStore } from '@/store/useParuStore';
+import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  useAudioStream,
+} from 'expo-audio';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
-const { height } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const MAX_RECORDING_SECONDS = 5.0;
 
 export default function ScanParuScreen() {
@@ -75,9 +74,17 @@ export default function ScanParuScreen() {
   const startTimeRef = useRef<number>(0);
   const isStoppingRef = useRef<boolean>(false);
 
-  // Reanimated Shared Values
-  const shakeAnim = useSharedValue(0);
-  const pulseAnim = useSharedValue(1);
+  // Reanimated Shared Values for Mascot & Sparks
+  const detectorTilt = useSharedValue(0);
+  const detectorScale = useSharedValue(1);
+  const detectorFloat = useSharedValue(0);
+
+  const sparksOpacity = useSharedValue(0);
+  const sparksScale = useSharedValue(0.7);
+  const sparksAnim1 = useSharedValue(1); // Top-Left pulse
+  const sparksAnim2 = useSharedValue(1); // Bottom-Right pulse
+  const sparksFlicker = useSharedValue(1); // Electric micro-flicker
+
   const pointerAnimY = useSharedValue(100);
   const pointerScale = useSharedValue(1);
   const pointerOpacity = useSharedValue(0);
@@ -89,7 +96,7 @@ export default function ScanParuScreen() {
       isCapturingRef.current = false;
       try {
         stream?.stop();
-      } catch {}
+      } catch { }
     };
   }, [stream]);
 
@@ -165,10 +172,26 @@ export default function ScanParuScreen() {
     opacity: pointerOpacity.value,
   }));
 
-  const shakeStyle = useAnimatedStyle(() => ({
+  const detectorAnimStyle = useAnimatedStyle(() => ({
     transform: [
-      { rotate: `${shakeAnim.value}deg` },
-      { scale: pulseAnim.value },
+      { rotate: `${detectorTilt.value}deg` },
+      { scale: detectorScale.value },
+      { translateY: detectorFloat.value },
+    ],
+  }));
+
+  const topLeftSparksStyle = useAnimatedStyle(() => ({
+    opacity: sparksOpacity.value * sparksFlicker.value,
+    transform: [
+      { scale: sparksScale.value * sparksAnim1.value },
+    ],
+  }));
+
+  const bottomRightSparksStyle = useAnimatedStyle(() => ({
+    opacity: sparksOpacity.value * sparksFlicker.value,
+    transform: [
+      { scale: sparksScale.value * sparksAnim2.value },
+      { rotate: '145deg' },
     ],
   }));
 
@@ -181,7 +204,7 @@ export default function ScanParuScreen() {
         setShowTutorial(false);
         try {
           await SecureStore.setItemAsync('hasSeenScanTutorial2', 'true');
-        } catch {}
+        } catch { }
       }
 
       setResult(null);
@@ -212,21 +235,75 @@ export default function ScanParuScreen() {
       setIsRecording(true);
       startTimeRef.current = Date.now();
 
-      // 4. Mascot shake & pulse animation
-      shakeAnim.value = withRepeat(
+      // 4. Start Sparks entrance & pulsating animations
+      sparksOpacity.value = withTiming(1, { duration: 250 });
+      sparksScale.value = withSequence(
+        withTiming(1.12, { duration: 220, easing: Easing.out(Easing.back(1.5)) }),
+        withTiming(1.0, { duration: 150 })
+      );
+
+      // Top-Left Sparks pulse / electric rhythm
+      sparksAnim1.value = withRepeat(
         withSequence(
-          withTiming(-6, { duration: 80, easing: Easing.linear }),
-          withTiming(6, { duration: 80, easing: Easing.linear }),
-          withTiming(0, { duration: 80, easing: Easing.linear })
+          withTiming(1.08, { duration: 280, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.94, { duration: 240, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.04, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.0, { duration: 180, easing: Easing.inOut(Easing.ease) })
         ),
         -1,
         true
       );
 
-      pulseAnim.value = withRepeat(
+      // Bottom-Right Sparks pulse / electric rhythm (counter-phase)
+      sparksAnim2.value = withRepeat(
         withSequence(
-          withTiming(1.04, { duration: 400 }),
-          withTiming(1.0, { duration: 400 })
+          withTiming(0.94, { duration: 240, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.1, { duration: 280, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.98, { duration: 200, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.0, { duration: 180, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+
+      // Micro electric flicker
+      sparksFlicker.value = withRepeat(
+        withSequence(
+          withTiming(0.85, { duration: 80 }),
+          withTiming(1.0, { duration: 60 }),
+          withTiming(0.92, { duration: 90 }),
+          withTiming(1.0, { duration: 120 })
+        ),
+        -1,
+        true
+      );
+
+      // Mascot acoustic breathing & wobble
+      detectorTilt.value = withRepeat(
+        withSequence(
+          withTiming(-1.2, { duration: 180, easing: Easing.inOut(Easing.sin) }),
+          withTiming(1.2, { duration: 180, easing: Easing.inOut(Easing.sin) }),
+          withTiming(-0.8, { duration: 180, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.8, { duration: 180, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0, { duration: 120, easing: Easing.inOut(Easing.sin) })
+        ),
+        -1,
+        true
+      );
+
+      detectorScale.value = withRepeat(
+        withSequence(
+          withTiming(1.025, { duration: 450, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.0, { duration: 450, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+
+      detectorFloat.value = withRepeat(
+        withSequence(
+          withTiming(-3.5, { duration: 500, easing: Easing.inOut(Easing.quad) }),
+          withTiming(2, { duration: 500, easing: Easing.inOut(Easing.quad) })
         ),
         -1,
         true
@@ -267,8 +344,16 @@ export default function ScanParuScreen() {
 
     clearAllTimers();
     setIsRecording(false);
-    shakeAnim.value = withTiming(0);
-    pulseAnim.value = withTiming(1);
+
+    // Smoothly settle animations back to rest
+    sparksOpacity.value = withTiming(0, { duration: 200 });
+    sparksScale.value = withTiming(0.7, { duration: 200 });
+    sparksAnim1.value = withTiming(1, { duration: 200 });
+    sparksAnim2.value = withTiming(1, { duration: 200 });
+    sparksFlicker.value = withTiming(1, { duration: 150 });
+    detectorTilt.value = withTiming(0, { duration: 250 });
+    detectorScale.value = withTiming(1, { duration: 250 });
+    detectorFloat.value = withTiming(0, { duration: 250 });
 
     try {
       isCapturingRef.current = false;
@@ -363,68 +448,76 @@ export default function ScanParuScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View className="flex-1 bg-[#8DC5B8]">
       {/* Header with Back & History Buttons */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Feather name="arrow-left" size={26} color="#FFFFFF" />
+      <View className="flex-row items-center justify-between pt-14 px-5 pb-2.5 bg-transparent z-10">
+        <Pressable
+          onPress={() => router.back()}
+          className="p-2 rounded-2xl bg-white/30 items-center justify-center active:opacity-75"
+        >
+          <Feather name="arrow-left" size={24} color="#FFFFFF" />
         </Pressable>
-        <Text style={styles.headerTitle}>Deteksi Suara Paru</Text>
+        <Text style={{ fontFamily: 'FuzzyBubbles_700Bold' }} className="text-xl text-white">
+          Deteksi Suara Paru
+        </Text>
         <Pressable
           onPress={() => router.push('/scan-paru/history')}
-          style={styles.historyButton}
+          className="p-2 rounded-2xl bg-white/30 items-center justify-center active:opacity-75"
         >
           <Feather name="clock" size={22} color="#FFFFFF" />
         </Pressable>
       </View>
 
-      <View style={styles.content}>
+      <View className="flex-1 items-center justify-center px-5 pb-6">
         {/* Model Selector Tabs */}
         {!result && !isProcessing && (
-          <View style={styles.modelSelectorContainer}>
-            <Text style={styles.modelSelectorLabel}>Pilih Kategori Deteksi:</Text>
-            <View style={styles.modelButtonsRow}>
+          <View className="items-center mb-2.5 w-full">
+            <Text
+              style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+              className="text-xs text-[#E8F5F2] mb-2"
+            >
+              Pilih Kategori Deteksi:
+            </Text>
+            <View className="flex-row bg-white/30 rounded-full p-1 gap-2">
               <Pressable
-                style={[
-                  styles.modelTab,
-                  selectedModel === 'spr' && styles.modelTabActive,
-                ]}
+                className={`flex-row items-center py-2 px-4 rounded-full gap-1.5 ${
+                  selectedModel === 'spr' ? 'bg-[#32605E] shadow-sm elevation-3' : ''
+                }`}
                 disabled={isRecording}
                 onPress={() => setSelectedModel('spr')}
               >
                 <MaterialCommunityIcons
                   name="waveform"
                   size={18}
-                  color={selectedModel === 'spr' ? '#FFFFFF' : '#3D7371'}
+                  color={selectedModel === 'spr' ? '#FFFFFF' : '#2C5A56'}
                 />
                 <Text
-                  style={[
-                    styles.modelTabText,
-                    selectedModel === 'spr' && styles.modelTabTextActive,
-                  ]}
+                  style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                  className={`text-xs ${
+                    selectedModel === 'spr' ? 'text-white' : 'text-[#2C5A56]'
+                  }`}
                 >
                   Pernafasan
                 </Text>
               </Pressable>
 
               <Pressable
-                style={[
-                  styles.modelTab,
-                  selectedModel === 'icbhi' && styles.modelTabActive,
-                ]}
+                className={`flex-row items-center py-2 px-4 rounded-full gap-1.5 ${
+                  selectedModel === 'icbhi' ? 'bg-[#32605E] shadow-sm elevation-3' : ''
+                }`}
                 disabled={isRecording}
                 onPress={() => setSelectedModel('icbhi')}
               >
                 <MaterialCommunityIcons
                   name="database-outline"
                   size={18}
-                  color={selectedModel === 'icbhi' ? '#FFFFFF' : '#3D7371'}
+                  color={selectedModel === 'icbhi' ? '#FFFFFF' : '#2C5A56'}
                 />
                 <Text
-                  style={[
-                    styles.modelTabText,
-                    selectedModel === 'icbhi' && styles.modelTabTextActive,
-                  ]}
+                  style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                  className={`text-xs ${
+                    selectedModel === 'icbhi' ? 'text-white' : 'text-[#2C5A56]'
+                  }`}
                 >
                   Batuk
                 </Text>
@@ -435,61 +528,86 @@ export default function ScanParuScreen() {
 
         {result ? (
           /* RESULT SCREEN */
-          <View style={styles.resultContainer}>
+          <View
+            className="w-full flex-1 bg-white rounded-3xl shadow-lg elevation-6"
+            style={{ maxHeight: height * 0.78 }}
+          >
             <ScrollView
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.resultScrollContent}
+              contentContainerStyle={{ alignItems: 'center', padding: 22, paddingBottom: 36 }}
             >
               <View
-                style={[
-                  styles.diagnosisBadge,
-                  { backgroundColor: getPredictionColor(result.prediction) },
-                ]}
+                className="w-16 h-16 rounded-full items-center justify-center mb-3 shadow-sm elevation-3"
+                style={{ backgroundColor: getPredictionColor(result.prediction) }}
               >
                 <Feather name="activity" size={28} color="#FFFFFF" />
               </View>
 
-              <View style={styles.modelUsedBadge}>
-                <Text style={styles.modelUsedBadgeText}>
+              <View className="bg-[#E8F1F5] px-3 py-1 rounded-xl mb-2">
+                <Text
+                  style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                  className="text-xs text-[#6CA8C2]"
+                >
                   Kategori: {selectedModel === 'spr' ? 'Suara Pernafasan (SPR)' : 'Suara Batuk (ICBHI)'}
                 </Text>
               </View>
 
-              <Text style={styles.resultTitle}>Hasil Deteksi</Text>
+              <Text
+                style={{ fontFamily: 'FuzzyBubbles_400Regular' }}
+                className="text-sm text-gray-500 mb-1"
+              >
+                Hasil Deteksi
+              </Text>
 
               <Text
-                style={[
-                  styles.primaryDiagnosis,
-                  { color: getPredictionColor(result.prediction) },
-                ]}
+                style={{
+                  fontFamily: 'FuzzyBubbles_700Bold',
+                  color: getPredictionColor(result.prediction),
+                }}
+                className="text-2xl mb-1.5 text-center"
               >
                 {result.prediction}
               </Text>
 
-              <Text style={styles.confidenceText}>
+              <Text
+                style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                className="text-sm text-[#6CA8C2] mb-5"
+              >
                 Tingkat Keyakinan: {result.confidence.toFixed(1)}%
               </Text>
 
               {/* Probabilities Breakdown */}
               {result.all_probabilities && Object.keys(result.all_probabilities).length > 0 && (
-                <View style={styles.scoresContainer}>
-                  <Text style={styles.scoresTitle}>Distribusi Probabilitas:</Text>
+                <View className="w-full bg-[#F9FCFB] rounded-2xl p-3.5 mb-5 border border-[#E8F1F5]">
+                  <Text
+                    style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                    className="text-xs text-gray-600 mb-2.5"
+                  >
+                    Distribusi Probabilitas:
+                  </Text>
                   {Object.entries(result.all_probabilities).map(([className, scoreValue], idx) => {
                     const pct = typeof scoreValue === 'number' ? scoreValue : 0;
                     return (
-                      <View key={idx} style={styles.scoreRow}>
-                        <Text style={styles.scoreLabel} numberOfLines={1}>
+                      <View key={idx} className="flex-row items-center my-1">
+                        <Text
+                          style={{ fontFamily: 'FuzzyBubbles_400Regular' }}
+                          className="w-[70px] text-xs text-gray-600"
+                          numberOfLines={1}
+                        >
                           {className}
                         </Text>
-                        <View style={styles.progressBarBg}>
+                        <View className="flex-1 h-2 bg-[#E8F1F5] rounded-full mx-2.5 overflow-hidden">
                           <View
-                            style={[
-                              styles.progressBarFill,
-                              { width: `${Math.min(Math.max(pct, 2), 100)}%` },
-                            ]}
+                            className="h-full bg-[#FFAE9D] rounded-full"
+                            style={{ width: `${Math.min(Math.max(pct, 2), 100)}%` }}
                           />
                         </View>
-                        <Text style={styles.scoreValue}>{pct.toFixed(0)}%</Text>
+                        <Text
+                          style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                          className="w-[38px] text-xs text-[#FFAE9D] text-right"
+                        >
+                          {pct.toFixed(0)}%
+                        </Text>
                       </View>
                     );
                   })}
@@ -498,25 +616,45 @@ export default function ScanParuScreen() {
 
               {/* LLM Clinical Insights */}
               {llmResult && (
-                <View style={styles.llmSection}>
-                  <View style={styles.llmHeaderRow}>
+                <View className="w-full bg-[#F7FBFA] p-4 rounded-2xl mb-5 border border-[#E8F1F5]">
+                  <View className="flex-row items-center mb-1.5 gap-1.5">
                     <MaterialCommunityIcons name="stethoscope" size={20} color="#6CA8C2" />
-                    <Text style={styles.llmTitle}>Analisis Medis AI</Text>
+                    <Text
+                      style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                      className="text-sm text-[#3D7371]"
+                    >
+                      Analisis Medis AI
+                    </Text>
                   </View>
-                  <Text style={styles.llmText}>{llmResult.diagnosis}</Text>
+                  <Text
+                    style={{ fontFamily: 'FuzzyBubbles_400Regular' }}
+                    className="text-xs text-gray-600 leading-5 mb-2"
+                  >
+                    {llmResult.diagnosis}
+                  </Text>
 
-                  <View style={[styles.llmHeaderRow, { marginTop: 12 }]}>
+                  <View className="flex-row items-center mb-1.5 mt-3 gap-1.5">
                     <MaterialCommunityIcons name="lightbulb-on-outline" size={20} color="#F0A080" />
-                    <Text style={styles.llmTitle}>Rekomendasi Tindakan</Text>
+                    <Text
+                      style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                      className="text-sm text-[#3D7371]"
+                    >
+                      Rekomendasi Tindakan
+                    </Text>
                   </View>
-                  <Text style={styles.llmText}>{llmResult.recommendations}</Text>
+                  <Text
+                    style={{ fontFamily: 'FuzzyBubbles_400Regular' }}
+                    className="text-xs text-gray-600 leading-5"
+                  >
+                    {llmResult.recommendations}
+                  </Text>
                 </View>
               )}
 
               {/* Action Buttons */}
-              <View style={styles.actionButtons}>
+              <View className="flex-row gap-3 w-full mt-1">
                 <Pressable
-                  style={styles.resetButton}
+                  className="flex-1 flex-row bg-[#E8F1F5] py-3.5 rounded-full items-center justify-center active:opacity-75"
                   onPress={() => {
                     setResult(null);
                     setLlmResult(null);
@@ -524,13 +662,26 @@ export default function ScanParuScreen() {
                   }}
                 >
                   <Feather name="refresh-cw" size={18} color="#6CA8C2" style={{ marginRight: 6 }} />
-                  <Text style={styles.resetButtonText}>Rekam Ulang</Text>
+                  <Text
+                    style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                    className="text-sm text-[#6CA8C2]"
+                  >
+                    Rekam Ulang
+                  </Text>
                 </Pressable>
 
                 {llmResult && (
-                  <Pressable style={styles.saveButton} onPress={handleSave}>
+                  <Pressable
+                    className="flex-1 flex-row bg-[#FFAE9D] py-3.5 rounded-full items-center justify-center active:opacity-75 shadow-sm elevation-2"
+                    onPress={handleSave}
+                  >
                     <Feather name="check" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
-                    <Text style={styles.saveButtonText}>Simpan Hasil</Text>
+                    <Text
+                      style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                      className="text-sm text-white"
+                    >
+                      Simpan Hasil
+                    </Text>
                   </Pressable>
                 )}
               </View>
@@ -538,60 +689,126 @@ export default function ScanParuScreen() {
           </View>
         ) : (
           /* DETECTOR SCREEN */
-          <View style={styles.detectorSection}>
+          <View className="items-center justify-center w-full">
             {/* Visual Countdown & Progress Bar */}
             {isRecording && (
-              <View style={styles.timerContainer}>
-                <View style={styles.timerBadge}>
-                  <View style={styles.recordingDot} />
-                  <Text style={styles.timerText}>
+              <View className="w-full items-center mb-2.5">
+                <View className="flex-row items-center bg-black/30 px-4 py-1.5 rounded-full mb-2">
+                  <View className="w-2.5 h-2.5 rounded-full bg-[#FF4D4D] mr-2" />
+                  <Text
+                    style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                    className="text-sm text-white"
+                  >
                     {recordingSeconds.toFixed(1)}s / {MAX_RECORDING_SECONDS.toFixed(1)}s
                   </Text>
                 </View>
 
                 {/* Progress bar countdown */}
-                <View style={styles.timerBarTrack}>
+                <View className="w-[68%] h-1.5 bg-white/35 rounded-full overflow-hidden">
                   <View
-                    style={[
-                      styles.timerBarFill,
-                      { width: `${(recordingSeconds / MAX_RECORDING_SECONDS) * 100}%` },
-                    ]}
+                    className="h-full bg-[#FFAE9D] rounded-full"
+                    style={{ width: `${(recordingSeconds / MAX_RECORDING_SECONDS) * 100}%` }}
                   />
                 </View>
               </View>
             )}
 
-            {/* Mascot Detector Illustration */}
-            <Animated.View style={[styles.detectorWrapper, shakeStyle]}>
-              {isRecording && (
+            {/* Mascot Detector Illustration with Sparks */}
+            <View
+              className="items-center justify-center relative my-2 overflow-visible"
+              style={{
+                width: Math.min(width * 0.74, 285),
+                height: Math.min(width * 0.74, 285) * 1.30,
+              }}
+            >
+              {/* Central Detector Mascot (Base Layer) */}
+              <Animated.View
+                style={[
+                  detectorAnimStyle,
+                  { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', zIndex: 2 }
+                ]}
+              >
                 <Image
-                  source={require('@/assets/images/Effect.svg')}
-                  style={styles.effectImage}
+                  source={require('@/assets/mascot/Detector.svg')}
+                  style={{ width: '100%', height: '100%' }}
+                  className="w-full h-full"
                   contentFit="contain"
                 />
-              )}
-              <Image
-                source={require('@/assets/mascot/Detector.svg')}
-                style={styles.detectorImage}
-                contentFit="contain"
-              />
-            </Animated.View>
+              </Animated.View>
+
+              {/* Top-Left Sparks Cluster (ON TOP of radio) */}
+              <Animated.View
+                style={[
+                  topLeftSparksStyle,
+                  {
+                    position: 'absolute',
+                    top: -28,
+                    left: -32,
+                    width: 155,
+                    height: 125,
+                    zIndex: 10,
+                    elevation: 10,
+                  },
+                ]}
+                pointerEvents="none"
+              >
+                <Image
+                  source={require('@/assets/images/Effect.svg')}
+                  style={{ width: '100%', height: '100%' }}
+                  className="w-full h-full"
+                  contentFit="contain"
+                />
+              </Animated.View>
+
+              {/* Bottom-Right Sparks Cluster (ON TOP of radio) */}
+              <Animated.View
+                style={[
+                  bottomRightSparksStyle,
+                  {
+                    position: 'absolute',
+                    bottom: -20,
+                    right: -25,
+                    width: 150,
+                    height: 120,
+                    zIndex: 10,
+                    elevation: 10,
+                  },
+                ]}
+                pointerEvents="none"
+              >
+                <Image
+                  source={require('@/assets/images/Effect.svg')}
+                  style={{ width: '100%', height: '100%' }}
+                  className="w-full h-full"
+                  contentFit="contain"
+                />
+              </Animated.View>
+            </View>
 
             {/* Processing Loading Spinner */}
             {isProcessing ? (
-              <View style={styles.processingState}>
-                <ActivityIndicator size="large" color="#FFFFFF" style={styles.spinner} />
-                <Text style={styles.processingText}>{processingStage || 'Memproses Suara Paru...'}</Text>
-                <Text style={styles.processingSubText}>Menghubungi server FastAPI...</Text>
+              <View className="items-center py-4 mt-2.5">
+                <ActivityIndicator size="large" color="#FFFFFF" className="mb-2.5" />
+                <Text
+                  style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                  className="text-base text-white mb-1"
+                >
+                  {processingStage || 'Memproses Suara Paru...'}
+                </Text>
+                <Text
+                  style={{ fontFamily: 'FuzzyBubbles_400Regular' }}
+                  className="text-xs text-white/85"
+                >
+                  Menghubungi server FastAPI...
+                </Text>
               </View>
             ) : (
               /* Recording Button (Start / Stop) */
-              <View style={styles.buttonContainer}>
+              <View className="relative items-center justify-center w-full mt-3.5">
                 <Pressable
-                  style={[
-                    styles.recordButton,
-                    isRecording && styles.recordButtonActive,
-                  ]}
+                  className={`flex-row items-center justify-center py-4 px-9 rounded-full shadow-md elevation-6 min-w-[230px] ${
+                    isRecording ? 'bg-[#FF5C5C]' : 'bg-[#FFAE9D]'
+                  }`}
                   onPress={isRecording ? stopRecordingAndProcess : startRecording}
                 >
                   <Feather
@@ -600,17 +817,23 @@ export default function ScanParuScreen() {
                     color="#FFFFFF"
                     style={{ marginRight: 10 }}
                   />
-                  <Text style={styles.recordButtonText}>
+                  <Text
+                    style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
+                    className="text-lg text-white"
+                  >
                     {isRecording ? `Hentikan Rekam (${recordingSeconds.toFixed(1)}s)` : 'Mulai Rekam'}
                   </Text>
                 </Pressable>
 
                 {/* Animated Pointer Tutorial Hand */}
                 {showTutorial && !isRecording && (
-                  <Animated.View style={[styles.pointerHand, pointerStyle]} pointerEvents="none">
+                  <Animated.View
+                    style={[pointerStyle, { position: 'absolute', bottom: -65, right: 15, zIndex: 20 }]}
+                    pointerEvents="none"
+                  >
                     <Image
                       source={require('@/assets/mascot/finger.svg')}
-                      style={{ width: 150, height: 150 }}
+                      style={{ width: 140, height: 140 }}
                       contentFit="contain"
                     />
                   </Animated.View>
@@ -623,366 +846,3 @@ export default function ScanParuScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#95C1B6',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 56,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    backgroundColor: 'transparent',
-    zIndex: 10,
-  },
-  headerTitle: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 20,
-    color: '#FFFFFF',
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  historyButton: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 20,
-  },
-  modelSelectorContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-    width: '100%',
-  },
-  modelSelectorLabel: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 14,
-    color: '#EAF5F2',
-    marginBottom: 8,
-  },
-  modelButtonsRow: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
-    borderRadius: 24,
-    padding: 4,
-    gap: 8,
-  },
-  modelTab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    gap: 6,
-  },
-  modelTabActive: {
-    backgroundColor: '#3D7371',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  modelTabText: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 13,
-    color: '#3D7371',
-  },
-  modelTabTextActive: {
-    color: '#FFFFFF',
-  },
-  detectorSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  timerContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  timerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.25)',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginBottom: 8,
-  },
-  recordingDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#FF5252',
-    marginRight: 8,
-  },
-  timerText: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 15,
-    color: '#FFFFFF',
-  },
-  timerBarTrack: {
-    width: '70%',
-    height: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  timerBarFill: {
-    height: '100%',
-    backgroundColor: '#FFAE9D',
-    borderRadius: 3,
-  },
-  detectorWrapper: {
-    width: 280,
-    height: 340,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    marginBottom: 30,
-  },
-  detectorImage: {
-    width: '100%',
-    height: '100%',
-    zIndex: 2,
-  },
-  effectImage: {
-    position: 'absolute',
-    width: 420,
-    height: 480,
-    zIndex: 1,
-  },
-  buttonContainer: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-  },
-  recordButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFAE9D',
-    paddingVertical: 18,
-    paddingHorizontal: 40,
-    borderRadius: 35,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    minWidth: 240,
-  },
-  recordButtonActive: {
-    backgroundColor: '#FF6B6B',
-  },
-  recordButtonText: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 20,
-    color: '#FFFFFF',
-  },
-  pointerHand: {
-    position: 'absolute',
-    bottom: -70,
-    right: 10,
-    zIndex: 20,
-  },
-  processingState: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  spinner: {
-    marginBottom: 10,
-  },
-  processingText: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 17,
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  processingSubText: {
-    fontFamily: 'FuzzyBubbles_400Regular',
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.85)',
-  },
-  resultContainer: {
-    width: '100%',
-    flex: 1,
-    maxHeight: height * 0.78,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-  },
-  resultScrollContent: {
-    alignItems: 'center',
-    padding: 22,
-    paddingBottom: 36,
-  },
-  diagnosisBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  modelUsedBadge: {
-    backgroundColor: '#E8F1F5',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  modelUsedBadgeText: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 12,
-    color: '#6CA8C2',
-  },
-  resultTitle: {
-    fontFamily: 'FuzzyBubbles_400Regular',
-    fontSize: 15,
-    color: '#777',
-    marginBottom: 4,
-  },
-  primaryDiagnosis: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 26,
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  confidenceText: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 15,
-    color: '#6CA8C2',
-    marginBottom: 20,
-  },
-  scoresContainer: {
-    width: '100%',
-    backgroundColor: '#F9FCFB',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#E8F1F5',
-  },
-  scoresTitle: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 13,
-    color: '#555',
-    marginBottom: 10,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 4,
-  },
-  scoreLabel: {
-    width: 70,
-    fontFamily: 'FuzzyBubbles_400Regular',
-    fontSize: 12,
-    color: '#555',
-  },
-  progressBarBg: {
-    flex: 1,
-    height: 8,
-    backgroundColor: '#E8F1F5',
-    borderRadius: 4,
-    marginHorizontal: 10,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#FFAE9D',
-    borderRadius: 4,
-  },
-  scoreValue: {
-    width: 38,
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 12,
-    color: '#FFAE9D',
-    textAlign: 'right',
-  },
-  llmSection: {
-    width: '100%',
-    backgroundColor: '#F7FBFA',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#E8F1F5',
-  },
-  llmHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-    gap: 6,
-  },
-  llmTitle: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 15,
-    color: '#3D7371',
-  },
-  llmText: {
-    fontFamily: 'FuzzyBubbles_400Regular',
-    fontSize: 13,
-    color: '#555',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-    marginTop: 4,
-  },
-  resetButton: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: '#E8F1F5',
-    paddingVertical: 14,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  resetButtonText: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 15,
-    color: '#6CA8C2',
-  },
-  saveButton: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: '#FFAE9D',
-    paddingVertical: 14,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveButtonText: {
-    fontFamily: 'FuzzyBubbles_700Bold',
-    fontSize: 15,
-    color: '#FFFFFF',
-  },
-});

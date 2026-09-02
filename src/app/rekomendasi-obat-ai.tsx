@@ -160,15 +160,23 @@ export default function RekomendasiObatAiScreen() {
                   <Pressable
                     key={age}
                     onPress={() => setChildAge(age)}
-                    className={`flex-1 py-2.5 rounded-xl border items-center justify-center ${
-                      childAge === age
-                        ? 'bg-[#6CA8C2] border-[#6CA8C2]'
-                        : 'bg-[#F7FBFA] border-[#E0ECE9]'
-                    }`}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 10,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: childAge === age ? '#6CA8C2' : '#F7FBFA',
+                      borderColor: childAge === age ? '#6CA8C2' : '#E0ECE9',
+                    }}
                   >
                     <Text
-                      style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
-                      className={`text-xs ${childAge === age ? 'text-white' : 'text-[#666]'}`}
+                      style={{
+                        fontFamily: 'FuzzyBubbles_700Bold',
+                        fontSize: 12,
+                        color: childAge === age ? '#FFFFFF' : '#666666',
+                      }}
                     >
                       {age} Th
                     </Text>
@@ -189,11 +197,16 @@ export default function RekomendasiObatAiScreen() {
                     <Pressable
                       key={preset}
                       onPress={() => handleToggleChip(preset)}
-                      className={`px-3 py-2 rounded-2xl border flex-row items-center ${
-                        isChecked
-                          ? 'bg-[#FFE5E5] border-[#FFAE9D]'
-                          : 'bg-[#F7FBFA] border-[#E0ECE9]'
-                      }`}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 16,
+                        borderWidth: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: isChecked ? '#FFE5E5' : '#F7FBFA',
+                        borderColor: isChecked ? '#FFAE9D' : '#E0ECE9',
+                      }}
                     >
                       <Feather
                         name={isChecked ? 'check-circle' : 'plus-circle'}
@@ -202,8 +215,11 @@ export default function RekomendasiObatAiScreen() {
                         style={{ marginRight: 6 }}
                       />
                       <Text
-                        style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
-                        className={`text-xs ${isChecked ? 'text-[#E65100]' : 'text-[#666]'}`}
+                        style={{
+                          fontFamily: 'FuzzyBubbles_700Bold',
+                          fontSize: 12,
+                          color: isChecked ? '#E65100' : '#666666',
+                        }}
                       >
                         {preset}
                       </Text>
@@ -225,8 +241,18 @@ export default function RekomendasiObatAiScreen() {
                 placeholderTextColor="#A0A0A0"
                 multiline
                 numberOfLines={3}
-                style={{ fontFamily: 'FuzzyBubbles_400Regular', textAlignVertical: 'top' }}
-                className="bg-[#F7FBFA] border border-[#E0ECE9] rounded-2xl p-3.5 text-sm text-[#333] min-h-[85px]"
+                style={{
+                  fontFamily: 'FuzzyBubbles_400Regular',
+                  textAlignVertical: 'top',
+                  backgroundColor: '#F7FBFA',
+                  borderColor: '#E0ECE9',
+                  borderWidth: 1,
+                  borderRadius: 16,
+                  padding: 14,
+                  fontSize: 14,
+                  color: '#333333',
+                  minHeight: 85,
+                }}
               />
             </View>
 

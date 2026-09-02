@@ -4,6 +4,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Image } from 'expo-image';
 import { APOTIK_DATA } from './apotik';
+import { getMedicineImageSource } from '@/store/usePharmacyStore';
 
 export default function ApotikDetailScreen() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function ApotikDetailScreen() {
             <View key={med.id} style={styles.medicineCard}>
               <View style={styles.medicineImageContainer}>
                 <Image
-                  source={{ uri: med.imageUrl }}
+                  source={getMedicineImageSource(med)}
                   style={styles.medicineImage}
                   contentFit="cover"
                 />
@@ -191,7 +192,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 6,
+    padding: 0,
   },
   medicineImage: {
     width: '100%',

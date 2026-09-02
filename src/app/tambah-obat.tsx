@@ -104,20 +104,39 @@ export default function TambahObatScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Banner Doctor Mascot */}
-        <View className="bg-[#6CA8C2] rounded-3xl p-4 flex-row items-center my-3 elevation-3">
-          <View className="flex-1 pr-2">
-            <Text style={{ fontFamily: 'FuzzyBubbles_700Bold' }} className="text-white text-base mb-1">
+        <View
+          style={{
+            backgroundColor: '#6CA8C2',
+            borderRadius: 24,
+            padding: 16,
+            paddingRight: 110,
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginVertical: 12,
+            overflow: 'hidden',
+            position: 'relative',
+            minHeight: 115,
+            elevation: 3,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontFamily: 'FuzzyBubbles_700Bold', color: '#FFFFFF', fontSize: 16, marginBottom: 4 }}>
               Catat Dosis Medis Anak
             </Text>
-            <Text style={{ fontFamily: 'FuzzyBubbles_400Regular' }} className="text-white/90 text-xs leading-4">
+            <Text style={{ fontFamily: 'FuzzyBubbles_400Regular', color: 'rgba(255, 255, 255, 0.9)', fontSize: 12, lineHeight: 17 }}>
               Masukkan resep dari dokter spesialis agar jadwal minum obat anak teratur dan terpantau.
             </Text>
           </View>
-          <View className="w-20 h-20 items-center justify-center">
+          <View style={{ position: 'absolute', right: -5, bottom: 0, width: 115, height: 125 }}>
             <Image
               source={require('@/assets/mascot/dr bunga 1.svg')}
               style={{ width: '100%', height: '100%' }}
               contentFit="contain"
+              contentPosition="bottom"
             />
           </View>
         </View>
@@ -134,8 +153,17 @@ export default function TambahObatScreen() {
               onChangeText={setName}
               placeholder="cth: Ventolin Inhaler / Profilas Sirup"
               placeholderTextColor="#A0A0A0"
-              style={{ fontFamily: 'FuzzyBubbles_400Regular' }}
-              className="bg-[#F7FBFA] border border-[#E0ECE9] rounded-2xl px-4 py-3 text-sm text-[#333]"
+              style={{
+                fontFamily: 'FuzzyBubbles_400Regular',
+                backgroundColor: '#F7FBFA',
+                borderColor: '#E0ECE9',
+                borderWidth: 1,
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                fontSize: 14,
+                color: '#333333',
+              }}
             />
           </View>
 
@@ -149,8 +177,17 @@ export default function TambahObatScreen() {
               onChangeText={setDosage}
               placeholder="cth: 2 semprot (puff) / 1 sendok teh (5ml)"
               placeholderTextColor="#A0A0A0"
-              style={{ fontFamily: 'FuzzyBubbles_400Regular' }}
-              className="bg-[#F7FBFA] border border-[#E0ECE9] rounded-2xl px-4 py-3 text-sm text-[#333]"
+              style={{
+                fontFamily: 'FuzzyBubbles_400Regular',
+                backgroundColor: '#F7FBFA',
+                borderColor: '#E0ECE9',
+                borderWidth: 1,
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                fontSize: 14,
+                color: '#333333',
+              }}
             />
           </View>
 
@@ -162,9 +199,9 @@ export default function TambahObatScreen() {
             <View className="flex-row bg-[#F7FBFA] border border-[#E0ECE9] rounded-2xl p-1 justify-between">
               {(
                 [
-                  { id: 'inhaler', label: 'Inhaler / Resp', icon: 'lungs' },
-                  { id: 'sirup', label: 'Sirup / Cair', icon: 'cup-water' },
-                  { id: 'tablet', label: 'Tablet / Kapsul', icon: 'pill' },
+                  { id: 'inhaler', label: 'Inhaler', icon: 'lungs' },
+                  { id: 'sirup', label: 'Sirup', icon: 'cup-water' },
+                  { id: 'tablet', label: 'Tablet', icon: 'pill' },
                   { id: 'lainnya', label: 'Lainnya', icon: 'medical-bag' },
                 ] as const
               ).map((t) => {
@@ -173,18 +210,30 @@ export default function TambahObatScreen() {
                   <Pressable
                     key={t.id}
                     onPress={() => setType(t.id)}
-                    className={`flex-1 py-2 rounded-xl items-center justify-center mx-0.5 ${
-                      isSelected ? 'bg-[#6CA8C2] elevation-2' : ''
-                    }`}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 8,
+                      borderRadius: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginHorizontal: 2,
+                      backgroundColor: isSelected ? '#6CA8C2' : 'transparent',
+                      elevation: isSelected ? 2 : 0,
+                    }}
                   >
                     <MaterialCommunityIcons
                       name={t.icon as any}
-                      size={16}
+                      size={18}
                       color={isSelected ? '#FFFFFF' : '#666666'}
                     />
                     <Text
-                      style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
-                      className={`text-[10px] mt-1 ${isSelected ? 'text-white' : 'text-[#666666]'}`}
+                      numberOfLines={1}
+                      style={{
+                        fontFamily: 'FuzzyBubbles_700Bold',
+                        fontSize: 11,
+                        marginTop: 4,
+                        color: isSelected ? '#FFFFFF' : '#666666',
+                      }}
                     >
                       {t.label}
                     </Text>
@@ -204,27 +253,49 @@ export default function TambahObatScreen() {
               onChangeText={setTime}
               placeholder="08:00"
               placeholderTextColor="#A0A0A0"
-              style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
-              className="bg-[#F7FBFA] border border-[#E0ECE9] rounded-2xl px-4 py-3 text-base text-[#3D7371] text-center mb-2"
+              style={{
+                fontFamily: 'FuzzyBubbles_700Bold',
+                backgroundColor: '#F7FBFA',
+                borderColor: '#E0ECE9',
+                borderWidth: 1,
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                fontSize: 16,
+                color: '#3D7371',
+                textAlign: 'center',
+                marginBottom: 8,
+              }}
             />
             {/* Presets Jam */}
             <View className="flex-row flex-wrap gap-2 justify-center">
-              {TIME_PRESETS.map((t) => (
-                <Pressable
-                  key={t}
-                  onPress={() => setTime(t)}
-                  className={`px-3 py-1.5 rounded-xl border ${
-                    time === t ? 'bg-[#6CA8C2] border-[#6CA8C2]' : 'bg-[#F7FBFA] border-[#E0ECE9]'
-                  }`}
-                >
-                  <Text
-                    style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
-                    className={`text-xs ${time === t ? 'text-white' : 'text-[#666]'}`}
+              {TIME_PRESETS.map((t) => {
+                const isSelected = time === t;
+                return (
+                  <Pressable
+                    key={t}
+                    onPress={() => setTime(t)}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 12,
+                      borderWidth: 1,
+                      backgroundColor: isSelected ? '#6CA8C2' : '#F7FBFA',
+                      borderColor: isSelected ? '#6CA8C2' : '#E0ECE9',
+                    }}
                   >
-                    {t}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text
+                      style={{
+                        fontFamily: 'FuzzyBubbles_700Bold',
+                        fontSize: 12,
+                        color: isSelected ? '#FFFFFF' : '#666666',
+                      }}
+                    >
+                      {t}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
 
@@ -234,24 +305,33 @@ export default function TambahObatScreen() {
               Aturan Minum
             </Text>
             <View className="flex-row flex-wrap gap-2">
-              {INSTRUCTION_PRESETS.map((inst) => (
-                <Pressable
-                  key={inst}
-                  onPress={() => setInstruction(inst)}
-                  className={`px-3.5 py-2 rounded-2xl border ${
-                    instruction === inst
-                      ? 'bg-[#E8F5F2] border-[#6CA8C2]'
-                      : 'bg-[#F7FBFA] border-[#E0ECE9]'
-                  }`}
-                >
-                  <Text
-                    style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
-                    className={`text-xs ${instruction === inst ? 'text-[#3D7371]' : 'text-[#666]'}`}
+              {INSTRUCTION_PRESETS.map((inst) => {
+                const isSelected = instruction === inst;
+                return (
+                  <Pressable
+                    key={inst}
+                    onPress={() => setInstruction(inst)}
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      backgroundColor: isSelected ? '#E8F5F2' : '#F7FBFA',
+                      borderColor: isSelected ? '#6CA8C2' : '#E0ECE9',
+                    }}
                   >
-                    {inst}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text
+                      style={{
+                        fontFamily: 'FuzzyBubbles_700Bold',
+                        fontSize: 12,
+                        color: isSelected ? '#3D7371' : '#666666',
+                      }}
+                    >
+                      {inst}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
 
@@ -261,24 +341,33 @@ export default function TambahObatScreen() {
               Frekuensi Pemakaian
             </Text>
             <View className="flex-row flex-wrap gap-2">
-              {FREQUENCY_PRESETS.map((freq) => (
-                <Pressable
-                  key={freq}
-                  onPress={() => setFrequency(freq)}
-                  className={`px-3.5 py-2 rounded-2xl border ${
-                    frequency === freq
-                      ? 'bg-[#FFE5E5] border-[#FFAE9D]'
-                      : 'bg-[#F7FBFA] border-[#E0ECE9]'
-                  }`}
-                >
-                  <Text
-                    style={{ fontFamily: 'FuzzyBubbles_700Bold' }}
-                    className={`text-xs ${frequency === freq ? 'text-[#E65100]' : 'text-[#666]'}`}
+              {FREQUENCY_PRESETS.map((freq) => {
+                const isSelected = frequency === freq;
+                return (
+                  <Pressable
+                    key={freq}
+                    onPress={() => setFrequency(freq)}
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderRadius: 16,
+                      borderWidth: 1,
+                      backgroundColor: isSelected ? '#FFE5E5' : '#F7FBFA',
+                      borderColor: isSelected ? '#FFAE9D' : '#E0ECE9',
+                    }}
                   >
-                    {freq}
-                  </Text>
-                </Pressable>
-              ))}
+                    <Text
+                      style={{
+                        fontFamily: 'FuzzyBubbles_700Bold',
+                        fontSize: 12,
+                        color: isSelected ? '#E65100' : '#666666',
+                      }}
+                    >
+                      {freq}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
 
@@ -292,8 +381,17 @@ export default function TambahObatScreen() {
               onChangeText={setDoctor}
               placeholder="cth: dr. Anna, Sp.A, Subsp, Respi"
               placeholderTextColor="#A0A0A0"
-              style={{ fontFamily: 'FuzzyBubbles_400Regular' }}
-              className="bg-[#F7FBFA] border border-[#E0ECE9] rounded-2xl px-4 py-3 text-sm text-[#333]"
+              style={{
+                fontFamily: 'FuzzyBubbles_400Regular',
+                backgroundColor: '#F7FBFA',
+                borderColor: '#E0ECE9',
+                borderWidth: 1,
+                borderRadius: 16,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                fontSize: 14,
+                color: '#333333',
+              }}
             />
           </View>
 
@@ -309,8 +407,18 @@ export default function TambahObatScreen() {
               placeholderTextColor="#A0A0A0"
               multiline
               numberOfLines={3}
-              style={{ fontFamily: 'FuzzyBubbles_400Regular', textAlignVertical: 'top' }}
-              className="bg-[#F7FBFA] border border-[#E0ECE9] rounded-2xl p-3.5 text-sm text-[#333] min-h-[80px]"
+              style={{
+                fontFamily: 'FuzzyBubbles_400Regular',
+                textAlignVertical: 'top',
+                backgroundColor: '#F7FBFA',
+                borderColor: '#E0ECE9',
+                borderWidth: 1,
+                borderRadius: 16,
+                padding: 14,
+                fontSize: 14,
+                color: '#333333',
+                minHeight: 80,
+              }}
             />
           </View>
 
@@ -318,7 +426,15 @@ export default function TambahObatScreen() {
           <Pressable
             onPress={handleSave}
             disabled={isSubmitting}
-            className="bg-[#6CA8C2] rounded-2xl py-4 items-center justify-center mt-2 shadow-md elevation-3"
+            style={{
+              backgroundColor: '#6CA8C2',
+              borderRadius: 16,
+              paddingVertical: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: 8,
+              elevation: 3,
+            }}
           >
             <Text style={{ fontFamily: 'FuzzyBubbles_700Bold' }} className="text-white text-base">
               {isSubmitting ? 'Menyimpan...' : 'Simpan Dosis ke Jadwal'}

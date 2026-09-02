@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "saparu",
-    "slug": "saparu",
+    "slug": "sora",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -17,6 +17,16 @@
     },
     "android": {
       "package": "com.saparu.sehat",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.INTERNET",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#9BCEC1",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -46,11 +56,45 @@
         {
           "microphonePermission": "Aplikasi membutuhkan akses mikrofon untuk merekam suara paru-paru Anda."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Aplikasi membutuhkan izin kamera untuk mengambil foto rontgen dada."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Aplikasi membutuhkan izin lokasi untuk mencari fasilitas kesehatan dan apotek terdekat."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Aplikasi membutuhkan akses galeri untuk memilih foto rontgen dada."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "30d90afc-35ff-4c65-b684-3c47243b3d93"
+      }
+    },
+    "owner": "sorado4muchmore"
   }
 }

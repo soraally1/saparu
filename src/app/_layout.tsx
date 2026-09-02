@@ -10,9 +10,12 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useAuthStore } from '@/store/useAuthStore';
+import { preloadAppAssets } from '@/utils/assetPreloader';
 
 import { Image } from 'expo-image';
 import Animated, { FadeOut } from 'react-native-reanimated';
+import DueScheduleReminderModal from '@/components/DueScheduleReminderModal';
+import { requestNotificationPermission } from '@/utils/notificationService';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,29 +27,38 @@ export default function RootLayout() {
 
   const { token, hydrateAuth } = useAuthStore();
   const [isReady, setIsReady] = useState(false);
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const segments = useSegments();
   const router = useRouter();
 
-  // Load auth state from SecureStore/localStorage on startup
+  // Load auth state, preload all image/SVG assets, and request notification permissions on startup
   useEffect(() => {
-    const initAuth = async () => {
-      await hydrateAuth();
-      setIsReady(true);
+    const initApp = async () => {
+      try {
+        await Promise.all([
+          hydrateAuth(),
+          preloadAppAssets(),
+          requestNotificationPermission(),
+        ]);
+      } finally {
+        setAssetsLoaded(true);
+        setIsReady(true);
+      }
     };
-    initAuth();
+    initApp();
   }, []);
 
-  // Hide native splash screen when fonts and auth are ready, then fade out in-app splash
+  // Hide native splash screen when fonts, assets, and auth are all ready
   useEffect(() => {
-    if (fontsLoaded && isReady) {
+    if (fontsLoaded && isReady && assetsLoaded) {
       SplashScreen.hideAsync();
       const timer = setTimeout(() => {
         setShowSplash(false);
-      }, 1500);
+      }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [fontsLoaded, isReady]);
+  }, [fontsLoaded, isReady, assetsLoaded]);
 
   // Handle routing based on auth state
   useEffect(() => {
@@ -68,9 +80,9 @@ export default function RootLayout() {
       // If user is not logged in and trying to access a protected screen, redirect to login
       router.replace('/login');
     }
-  }, [token, isReady, fontsLoaded, segments]);
+  }, [token, isReady, assetsLoaded, fontsLoaded, segments]);
 
-  if (!fontsLoaded || !isReady) {
+  if (!fontsLoaded || !isReady || !assetsLoaded) {
     return (
       <View style={{ flex: 1, backgroundColor: '#9BCEC1', justifyContent: 'center', alignItems: 'center' }}>
         <StatusBar style="dark" />
@@ -108,6 +120,9 @@ export default function RootLayout() {
         <Stack.Screen name="apotik-detail" />
         <Stack.Screen name="rumah-sakit-detail" />
       </Stack>
+
+      {/* Global Due Schedule & Medication In-App Reminder Modal */}
+      <DueScheduleReminderModal />
 
       {/* Branded Full-Screen Splash Screen Overlay */}
       {showSplash && (

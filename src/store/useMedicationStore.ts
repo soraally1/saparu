@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import * as SecureStore from 'expo-secure-store';
 import api from '@/lib/axios';
+import {
+  scheduleMedicationNotification,
+  syncAllMedicationNotifications,
+} from '@/utils/notificationService';
 
 export interface MedicationSchedule {
   id: string;
@@ -43,7 +47,9 @@ export const useMedicationStore = create<MedicationStore>((set, get) => ({
       // 1. Muat dari cache lokal SecureStore
       const stored = await SecureStore.getItemAsync(STORAGE_KEY);
       if (stored) {
-        set({ schedules: JSON.parse(stored), hasLoaded: true });
+        const parsed = JSON.parse(stored);
+        set({ schedules: parsed, hasLoaded: true });
+        syncAllMedicationNotifications(parsed);
       } else {
         set({ schedules: [], hasLoaded: true });
       }
@@ -54,6 +60,7 @@ export const useMedicationStore = create<MedicationStore>((set, get) => ({
         if (response.data && Array.isArray(response.data.data) && response.data.data.length > 0) {
           set({ schedules: response.data.data });
           await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(response.data.data));
+          syncAllMedicationNotifications(response.data.data);
         }
       } catch (e) {
         // Fallback ke data lokal
@@ -77,6 +84,9 @@ export const useMedicationStore = create<MedicationStore>((set, get) => ({
     set({ schedules: updated });
     await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(updated));
 
+    // Schedule device notification
+    await scheduleMedicationNotification(newSchedule);
+
     try {
       await api.post('/medications', newSchedule);
     } catch (err) {
@@ -95,6 +105,10 @@ export const useMedicationStore = create<MedicationStore>((set, get) => ({
     set({ schedules: updated });
     await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(updated));
 
+    for (const s of newSchedules) {
+      await scheduleMedicationNotification(s);
+    }
+
     try {
       for (const s of newSchedules) {
         await api.post('/medications', s);
@@ -108,6 +122,7 @@ export const useMedicationStore = create<MedicationStore>((set, get) => ({
     );
     set({ schedules: updated });
     await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(updated));
+    syncAllMedicationNotifications(updated);
 
     try {
       await api.patch(`/medications/${id}/toggle`);
@@ -118,6 +133,7 @@ export const useMedicationStore = create<MedicationStore>((set, get) => ({
     const updated = get().schedules.filter((s) => s.id !== id);
     set({ schedules: updated });
     await SecureStore.setItemAsync(STORAGE_KEY, JSON.stringify(updated));
+    syncAllMedicationNotifications(updated);
 
     try {
       await api.delete(`/medications/${id}`);
