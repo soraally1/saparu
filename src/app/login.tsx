@@ -69,10 +69,7 @@ export default function LoginScreen() {
   };
 
   const handleNavigateRegister = () => {
-    setIsVisible(false);
-    setTimeout(() => {
-      router.replace('/register');
-    }, 400);
+    router.replace('/register');
   };
 
   return (

@@ -78,16 +78,16 @@ export default function DashboardScreen() {
   const patient = useAuthStore(state => state.patient);
   const logout = useAuthStore(state => state.logout);
   const hydrateAuth = useAuthStore(state => state.hydrateAuth);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!patient);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    // Simulate loading data
-    const timer = setTimeout(() => {
+    if (!patient) {
+      hydrateAuth().finally(() => setIsLoading(false));
+    } else {
       setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
+    }
+  }, [patient, hydrateAuth]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

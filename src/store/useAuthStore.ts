@@ -34,9 +34,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setAuth: async (token, patient) => {
     try {
-      await setItemAsync('userToken', token);
-      await setItemAsync('patientData', JSON.stringify(patient));
       set({ token, patient });
+      await Promise.allSettled([
+        setItemAsync('userToken', token),
+        setItemAsync('patientData', JSON.stringify(patient)),
+      ]);
     } catch (error) {
       console.error('Error saving auth state:', error);
     }
@@ -44,9 +46,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     try {
-      await deleteItemAsync('userToken');
-      await deleteItemAsync('patientData');
+      // 1. Instantly clear memory state
       set({ token: null, patient: null });
+      // 2. Clear stored auth data
+      await Promise.allSettled([
+        deleteItemAsync('userToken'),
+        deleteItemAsync('patientData'),
+      ]);
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -54,13 +60,18 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   hydrateAuth: async () => {
     try {
-      const token = await getItemAsync('userToken');
-      const patientDataStr = await getItemAsync('patientData');
+      const [token, patientDataStr] = await Promise.all([
+        getItemAsync('userToken'),
+        getItemAsync('patientData'),
+      ]);
       if (token && patientDataStr) {
         set({ token, patient: JSON.parse(patientDataStr) });
+      } else {
+        set({ token: null, patient: null });
       }
     } catch (error) {
       console.error('Error hydrating auth state:', error);
+      set({ token: null, patient: null });
     }
   },
 }));

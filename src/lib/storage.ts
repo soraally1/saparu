@@ -2,38 +2,38 @@ import { Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 export const setItemAsync = async (key: string, value: string) => {
-  if (Platform.OS === 'web') {
-    try {
+  try {
+    if (Platform.OS === 'web') {
       localStorage.setItem(key, value);
-    } catch (e) {
-      console.error('Local storage is unavailable:', e);
+    } else {
+      await SecureStore.setItemAsync(key, value);
     }
-  } else {
-    await SecureStore.setItemAsync(key, value);
+  } catch (e) {
+    console.warn(`[Storage] Failed to set key "${key}":`, e);
   }
 };
 
 export const getItemAsync = async (key: string): Promise<string | null> => {
-  if (Platform.OS === 'web') {
-    try {
+  try {
+    if (Platform.OS === 'web') {
       return localStorage.getItem(key);
-    } catch (e) {
-      console.error('Local storage is unavailable:', e);
-      return null;
+    } else {
+      return await SecureStore.getItemAsync(key);
     }
-  } else {
-    return await SecureStore.getItemAsync(key);
+  } catch (e) {
+    console.warn(`[Storage] Failed to get key "${key}":`, e);
+    return null;
   }
 };
 
 export const deleteItemAsync = async (key: string) => {
-  if (Platform.OS === 'web') {
-    try {
+  try {
+    if (Platform.OS === 'web') {
       localStorage.removeItem(key);
-    } catch (e) {
-      console.error('Local storage is unavailable:', e);
+    } else {
+      await SecureStore.deleteItemAsync(key).catch(() => {});
     }
-  } else {
-    await SecureStore.deleteItemAsync(key);
+  } catch (e) {
+    console.warn(`[Storage] Failed to delete key "${key}":`, e);
   }
 };

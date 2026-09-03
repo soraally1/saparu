@@ -19,18 +19,41 @@ import { requestNotificationPermission } from '@/utils/notificationService';
 
 SplashScreen.preventAutoHideAsync();
 
+function AuthNavigationGuard({ isReady, fontsLoaded }: { isReady: boolean; fontsLoaded: boolean }) {
+  const token = useAuthStore((state) => state.token);
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isReady || !fontsLoaded) return;
+
+    const inAuthGroup = [
+      'login', 'register', 'register-name', 'pilih-gender', 
+      'confirm-gender', 'register-body', 'register-health', 'welcome'
+    ].includes(segments[0]);
+    
+    const isProtected = segments[0] === 'dashboard';
+
+    if (token && inAuthGroup) {
+      router.replace('/dashboard');
+    } else if (!token && isProtected) {
+      router.replace('/login');
+    }
+  }, [token, isReady, fontsLoaded, segments]);
+
+  return null;
+}
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     FuzzyBubbles_400Regular,
     FuzzyBubbles_700Bold,
   });
 
-  const { token, hydrateAuth } = useAuthStore();
+  const hydrateAuth = useAuthStore((state) => state.hydrateAuth);
   const [isReady, setIsReady] = useState(false);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const segments = useSegments();
-  const router = useRouter();
 
   // Load auth state, preload all image/SVG assets, and request notification permissions on startup
   useEffect(() => {
@@ -47,7 +70,7 @@ export default function RootLayout() {
       }
     };
     initApp();
-  }, []);
+  }, [hydrateAuth]);
 
   // Hide native splash screen when fonts, assets, and auth are all ready
   useEffect(() => {
@@ -55,32 +78,10 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
       const timer = setTimeout(() => {
         setShowSplash(false);
-      }, 1200);
+      }, 1000);
       return () => clearTimeout(timer);
     }
   }, [fontsLoaded, isReady, assetsLoaded]);
-
-  // Handle routing based on auth state
-  useEffect(() => {
-    if (!isReady || !fontsLoaded) return;
-
-    // Define auth-related screens that logged-in users shouldn't see
-    const inAuthGroup = [
-      'login', 'register', 'register-name', 'pilih-gender', 
-      'confirm-gender', 'register-body', 'register-health', 'welcome'
-    ].includes(segments[0]);
-    
-    // Define protected screens that unauthenticated users shouldn't see
-    const isProtected = segments[0] === 'dashboard';
-
-    if (token && inAuthGroup) {
-      // If user is logged in and trying to access an auth screen, redirect to dashboard
-      router.replace('/dashboard');
-    } else if (!token && isProtected) {
-      // If user is not logged in and trying to access a protected screen, redirect to login
-      router.replace('/login');
-    }
-  }, [token, isReady, assetsLoaded, fontsLoaded, segments]);
 
   if (!fontsLoaded || !isReady || !assetsLoaded) {
     return (
@@ -98,7 +99,14 @@ export default function RootLayout() {
   return (
     <View style={{ flex: 1, backgroundColor: '#9BCEC1' }}>
       <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: '#9BCEC1' } }}>
+      <AuthNavigationGuard isReady={isReady} fontsLoaded={fontsLoaded} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: 'default',
+          contentStyle: { backgroundColor: '#9BCEC1' },
+        }}
+      >
         <Stack.Screen name="index" />
         <Stack.Screen name="welcome" />
         <Stack.Screen name="login" options={{ animation: 'none' }} />

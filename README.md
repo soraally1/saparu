@@ -264,7 +264,7 @@ npx expo start
 
 ## 📦 Panduan Build Aplikasi (EAS Build)
 
-Untuk membuat file instalasi APK (*Standalone Android Build*):
+Untuk menghasilkan file APK yang terkompresi dan berukuran kecil (**~30–45 MB**, jauh di bawah 100 MB):
 
 ```bash
 # 1. Pastikan EAS CLI terpasang
@@ -273,8 +273,14 @@ npm install -g eas-cli
 # 2. Login ke akun Expo
 eas login
 
-# 3. Jalankan Build APK (Profil Preview)
+# 3. Build APK Khusus Smartphone Modern (arm64-v8a — Ukuran ~35 MB) [SANGAT DISARANKAN]
+eas build --profile preview-arm64 --platform android
+
+# 4. Atau Build APK Universal (arm64 + armv7 — Ukuran ~55 MB)
 eas build --profile preview --platform android
+
+# 5. Build Produksi Google Play Store (AAB Bundle — Ukuran unduhan pengguna ~25 MB)
+eas build --profile production --platform android
 ```
 
 ---

@@ -43,6 +43,10 @@ export default function RegisterScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    useRegistrationStore.getState().resetRegistration();
+  }, []);
+
   const handleRegister = async () => {
     if (!fullName || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Harap isi semua kolom');
@@ -78,10 +82,7 @@ export default function RegisterScreen() {
   };
 
   const handleNavigateLogin = () => {
-    setIsVisible(false);
-    setTimeout(() => {
-      router.replace('/login');
-    }, 400);
+    router.replace('/login');
   };
 
   return (

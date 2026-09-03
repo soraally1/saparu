@@ -8,33 +8,30 @@ import { addNotificationResponseListener } from '@/utils/notificationService';
 
 const { width } = Dimensions.get('window');
 
-export default function DueScheduleReminderModal() {
+function DueScheduleReminderModal() {
   const { schedules, toggleTaken, loadSchedules } = useMedicationStore();
   const [activeDueItem, setActiveDueItem] = useState<MedicationSchedule | null>(null);
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
 
-  // Check periodically for schedules that match the current time
+  // Load schedules once on mount
   useEffect(() => {
     loadSchedules();
+  }, []);
 
+  // Check periodically for schedules that match the current time
+  useEffect(() => {
     const checkDueSchedules = () => {
       const now = new Date();
-      const currentHours = String(now.getHours()).padStart(2, '0');
-      const currentMinutes = String(now.getMinutes()).padStart(2, '0');
-      const currentTimeStr = `${currentHours}:${currentMinutes}`;
+      const currentMinutesTotal = now.getHours() * 60 + now.getMinutes();
 
       const due = schedules.find((s) => {
         if (s.isTaken) return false;
         if (dismissedIds.includes(s.id)) return false;
 
-        // Check if time matches or within +-2 minutes of current time
         const [itemH, itemM] = (s.time || '').split(':');
         if (!itemH || !itemM) return false;
 
         const itemMinutesTotal = parseInt(itemH, 10) * 60 + parseInt(itemM, 10);
-        const currentMinutesTotal = now.getHours() * 60 + now.getMinutes();
-
-        // Trigger if time is within current 3 minute window
         const diff = Math.abs(currentMinutesTotal - itemMinutesTotal);
         return diff <= 1;
       });
@@ -44,7 +41,7 @@ export default function DueScheduleReminderModal() {
       }
     };
 
-    const interval = setInterval(checkDueSchedules, 15000);
+    const interval = setInterval(checkDueSchedules, 30000);
     checkDueSchedules();
 
     return () => clearInterval(interval);
@@ -302,3 +299,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 });
+
+export default React.memo(DueScheduleReminderModal);

@@ -93,42 +93,85 @@ export default function RegisterHealthScreen() {
   };
 
   const handleLanjut = async () => {
+    if (isLoading) return;
+
     const regState = useRegistrationStore.getState();
+
+    // Pastikan data email dan password awal tersedia
+    if (!regState.email || !regState.password) {
+      Alert.alert(
+        'Data Tidak Lengkap',
+        'Data pendaftaran tidak ditemukan. Silakan mulai pendaftaran dari awal.',
+        [{ text: 'Ke Halaman Pendaftaran', onPress: () => router.replace('/register') }]
+      );
+      return;
+    }
+
     const payload = {
-      email: regState.email,
+      email: regState.email.trim(),
       password: regState.password,
-      full_name: regState.full_name,
-      firstName: regState.firstName,
-      lastName: regState.lastName || '',
-      dob: regState.dob,
-      age: regState.age,
-      gender: regState.gender,
-      height: regState.height,
-      weight: regState.weight,
-      kondisiPernapasan: kondisi,
-      riwayatPernapasan: riwayat,
-      gejalaPemicu: gejala,
-      perawatanSaatIni: perawatan,
+      full_name: (regState.full_name || regState.firstName || 'Bunda').trim(),
+      firstName: (regState.firstName || 'Ananda').trim(),
+      lastName: (regState.lastName || '').trim(),
+      dob: regState.dob || '01/01/2020',
+      age: typeof regState.age === 'number' ? regState.age : 5,
+      gender: regState.gender || 'male',
+      height: typeof regState.height === 'number' && regState.height > 0 ? regState.height : 100,
+      weight: typeof regState.weight === 'number' && regState.weight > 0 ? regState.weight : 18,
+      kondisiPernapasan: kondisi.length > 0 ? kondisi : ['Sehat'],
+      riwayatPernapasan: riwayat.length > 0 ? riwayat : ['Tidak ada'],
+      gejalaPemicu: gejala.length > 0 ? gejala : ['Tidak tahu'],
+      perawatanSaatIni: perawatan.length > 0 ? perawatan : ['Tidak ada'],
     };
 
     setIsLoading(true);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 12000); // 12 seconds max hard timeout
+
     try {
-      const response = await api.post('/auth/register', payload);
-      
-      if (response.status === 200 || response.status === 201) {
-        const { token, patient } = response.data;
+      const response = await fetch('https://saparu-backend-go-six.vercel.app/api/v1/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      const resData = await response.json().catch(() => ({}));
+
+      if (response.ok && (response.status === 200 || response.status === 201)) {
+        const { token, patient } = resData;
         if (token && patient) {
           await useAuthStore.getState().setAuth(token, patient);
           useRegistrationStore.getState().resetRegistration();
           router.replace('/dashboard');
         } else {
-          Alert.alert('Sukses', 'Registrasi berhasil, silakan login');
-          router.replace('/login');
+          Alert.alert('Sukses', 'Registrasi berhasil! Silakan masuk ke akun Anda.', [
+            { text: 'Masuk', onPress: () => router.replace('/login') }
+          ]);
         }
+      } else {
+        const errMsg = resData.error || resData.message || `Gagal mendaftar (Status ${response.status})`;
+        Alert.alert('Gagal Registrasi', errMsg);
       }
     } catch (error: any) {
-      console.error('Register API error:', error);
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Terjadi kesalahan saat menyimpan data ke server.';
+      clearTimeout(timeoutId);
+      console.error('Register error:', error);
+      let errorMsg = 'Terjadi kesalahan saat menyimpan data ke server.';
+      
+      if (error.name === 'AbortError' || error.message?.includes('aborted') || error.message?.includes('timeout')) {
+        errorMsg = 'Koneksi ke server timeout (waktu habis 12 detik). Silakan periksa koneksi internet Anda dan coba lagi.';
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+
       Alert.alert('Gagal Registrasi', errorMsg);
     } finally {
       setIsLoading(false);
