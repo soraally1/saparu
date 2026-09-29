@@ -218,7 +218,7 @@ export const useMedicationStore = create<MedicationStore>((set, get) => ({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'qwen/qwen3.6-27b',
+          model: 'qwen/qwen3.8-27b',
           reasoning_format: 'hidden',
           max_tokens: 4096,
           temperature: 0.2,

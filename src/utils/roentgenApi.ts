@@ -1,3 +1,5 @@
+import { File } from 'expo-file-system';
+
 export interface RoentgenFindings {
   lungField?: string;
   heartAndMediastinum?: string;
@@ -16,13 +18,30 @@ export interface RoentgenAnalysisResult {
 }
 
 /**
- * Parser helper untuk mengekstrak respons JSON komprehensif dari model AI Qwen
+ * Membaca file gambar dari URI lokal dan mengonversinya ke base64.
+ * Menggunakan File API baru dari expo-file-system (Expo v57+).
+ */
+async function imageUriToBase64(uri: string): Promise<{ base64: string; mimeType: string }> {
+  const localUri = uri.startsWith('file://') ? uri : `file://${uri}`;
+  const file = new File(localUri);
+  const base64 = await file.base64();
+  const lower = uri.toLowerCase();
+  let mimeType = 'image/jpeg';
+  if (lower.endsWith('.png')) mimeType = 'image/png';
+  else if (lower.endsWith('.webp')) mimeType = 'image/webp';
+  return { base64, mimeType };
+}
+
+/**
+ * Parser helper untuk mengekstrak respons JSON dari model AI
  */
 function parseMedicalAiResponse(rawContent: string): RoentgenAnalysisResult {
-  // 1. Bersihkan tag reasoning <think>...</think>
-  let clean = rawContent.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  let clean = rawContent
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/gi, '')
+    .trim();
 
-  // 2. Ekstrak blok JSON dengan regex
   const jsonMatch = clean.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
     clean = jsonMatch[0];
@@ -39,62 +58,29 @@ function parseMedicalAiResponse(rawContent: string): RoentgenAnalysisResult {
     const redFlagsList = Array.isArray(parsed.redFlags) ? parsed.redFlags : [];
 
     return {
-      diagnosisTitle:
-        parsed.diagnosisTitle || 'Pneumonia Perihilar Bilateral (Bronkopneumonia)',
-      diagnosis:
-        parsed.diagnosis ||
-        'Pola paru-paru menunjukkan peningkatan corakan bronkovaskular dan opasitas bercak halus di perihilar bilateral, mencerminkan adanya reaksi inflamasi pernapasan bawah pada anak.',
-      severity: parsed.severity || 'Sedang',
-      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 89.0,
+      diagnosisTitle: parsed.diagnosisTitle ?? '',
+      diagnosis: parsed.diagnosis ?? '',
+      severity: parsed.severity ?? 'Sedang',
+      confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0,
       findings: {
-        lungField:
-          parsed.findings?.lungField ||
-          'Peningkatan corakan bronkovaskular dengan opasitas bercak halus di perihilar bilateral.',
-        heartAndMediastinum:
-          parsed.findings?.heartAndMediastinum ||
-          'Ukuran jantung normal (CTR < 0.5), konfigurasi jantung dan mediastinum dalam batas normal.',
-        diaphragmAndSinus:
-          parsed.findings?.diaphragmAndSinus ||
-          'Sinus kostofrenikus tajam bilateral, tidak ada tanda efusi pleura.',
-        bones:
-          parsed.findings?.bones ||
-          'Tidak ditemukan kelainan tulang skeletal atau fraktur pada toraks.',
+        lungField: parsed.findings?.lungField ?? '',
+        heartAndMediastinum: parsed.findings?.heartAndMediastinum ?? '',
+        diaphragmAndSinus: parsed.findings?.diaphragmAndSinus ?? '',
+        bones: parsed.findings?.bones ?? '',
       },
-      recommendations:
-        rec ||
-        '1. Evaluasi klinis lengkap dan korelasi dengan gejala batuk serta demam anak.\n\n2. Pertimbangkan pemeriksaan penunjang lab (darah lengkap/CRP) dan terapi suportif.\n\n3. Lakukan kontrol klinis ke dokter spesialis anak dalam 48-72 jam.',
-      redFlags:
-        redFlagsList.length > 0
-          ? redFlagsList
-          : [
-              'Sesak napas progresif atau takipnea melebihi batas usia',
-              'Saturasi oksigen (SpO2) di bawah 92% di udara ruangan',
-              'Retraksi dinding dada ke dalam atau napas cuping hidung',
-              'Anak tampak letargi, menolak minum, atau bibir kebiruan (sianosis)',
-            ],
+      recommendations: rec ?? '',
+      redFlags: redFlagsList,
     };
   } catch (err) {
-    console.warn('Gagal parse JSON mentah AI, menggunakan struktur default cerdas:', err);
+    console.warn('Gagal parse JSON dari respons AI:', err);
     return {
-      diagnosisTitle: 'Bronkopneumonia / Pneumonia Viral Anak',
-      diagnosis:
-        'Pola radiologis toraks menunjukkan peningkatan corakan bronkovaskular bilateral dengan infiltrat perihilar halus. Temuan ini konsisten dengan bronkopneumonia atau pneumonia viral yang memerlukan penanganan suportif.',
+      diagnosisTitle: 'Gagal Memuat Hasil',
+      diagnosis: 'Respons AI tidak dapat diproses. Silakan coba kembali.',
       severity: 'Sedang',
-      confidence: 89.0,
-      findings: {
-        lungField: 'Tampak peningkatan corakan bronkovaskular dengan opasitas bercak halus di area perihilar bilateral.',
-        heartAndMediastinum: 'CTR < 0.5 (normal untuk usia anak), mediastinum tidak melebar.',
-        diaphragmAndSinus: 'Sinus kostofrenikus bilateral tajam (tidak tampak efusi pleura).',
-        bones: 'Sistem skeletal toraks intak tanpa kelainan bentuk.',
-      },
-      recommendations:
-        '1. Pantau ketat pola dan frekuensi napas anak di rumah.\n\n2. Jaga hidrasi cairan tubuh yang cukup dan berikan nutrisi adekuat.\n\n3. Konsultasikan dengan dokter spesialis anak untuk evaluasi klinis lanjutan dan terapi sesuai indikasi.',
-      redFlags: [
-        'Sesak napas berat dan napas cepat tersengal-sengal',
-        'Tarikan dinding dada bagian bawah saat menarik napas',
-        'Bibir atau ujung kuku tampak pucat atau kebiruan',
-        'Anak tampak lemas dan sulit dibangunkan',
-      ],
+      confidence: 0,
+      findings: {},
+      recommendations: 'Ulangi analisis atau konsultasikan langsung dengan dokter spesialis.',
+      redFlags: [],
     };
   }
 }
@@ -102,12 +88,6 @@ function parseMedicalAiResponse(rawContent: string): RoentgenAnalysisResult {
 export const analyzeRoentgenImage = async (imageUri: string): Promise<RoentgenAnalysisResult> => {
   console.log('Menganalisis foto rontgen dada:', imageUri);
 
-  // 1. Preprocessing / AI Delay Simulation
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  const mockCvDetection =
-    'Tampak peningkatan corakan bronkovaskular dan opasitas bercak halus di perihilar bilateral, sinus kostofrenikus tajam, CTR < 0.5.';
-
-  // 2. Groq LLM Analysis menggunakan qwen/qwen3.6-27b
   const GROQ_API_KEY = process.env.EXPO_PUBLIC_SAPARU_API_KEY;
 
   if (!GROQ_API_KEY) {
@@ -118,51 +98,62 @@ export const analyzeRoentgenImage = async (imageUri: string): Promise<RoentgenAn
       severity: 'Normal',
       confidence: 0,
       findings: {},
-      recommendations: 'Harap periksa pengaturan API key pada file environment.',
+      recommendations: 'Tambahkan EXPO_PUBLIC_SAPARU_API_KEY ke file .env aplikasi.',
       redFlags: [],
     };
   }
 
   try {
+    // 1. Baca gambar rontgen sebagai base64
+    const { base64, mimeType } = await imageUriToBase64(imageUri);
+    const dataUrl = `data:${mimeType};base64,${base64}`;
+
+    // 2. Kirim gambar + prompt ke Groq qwen/qwen3.8-27b (multimodal)
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${GROQ_API_KEY}`,
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'qwen/qwen3.6-27b',
+        model: 'qwen/qwen3.8-27b',
         reasoning_format: 'hidden',
-        max_tokens: 4096,
-        temperature: 0.1,
+        temperature: 0.2,
+        max_tokens: 2048,
         messages: [
           {
-            role: 'system',
-            content: `Anda adalah asisten medis dokter spesialis radiologi anak di Saparu. Berikan ringkasan padat dan jelas dalam JSON murni:
-{
-  "diagnosisTitle": "...",
-  "diagnosis": "...",
-  "severity": "Sedang",
-  "confidence": 89.0,
-  "findings": {
-    "lungField": "...",
-    "heartAndMediastinum": "...",
-    "diaphragmAndSinus": "...",
-    "bones": "..."
-  },
-  "recommendations": "...",
-  "redFlags": [
-    "...",
-    "..."
-  ]
-}
-Jawab dalam bahasa Indonesia tanpa markdown pembungkus.`
-          },
-          {
             role: 'user',
-            content: `Analisis temuan radiologi rontgen anak: ${mockCvDetection}. Berikan diagnosis, 4 temuan anatomi, rekomendasi perawatan, dan red flags.`
-          }
-        ]
+            content: [
+              {
+                type: 'image_url',
+                image_url: { url: dataUrl },
+              },
+              {
+                type: 'text',
+                text: `Anda adalah asisten medis dokter spesialis radiologi anak di Saparu. Analisis foto rontgen toraks anak ini secara objektif dan menyeluruh berdasarkan gambar yang diberikan.
+
+Diagnosis TIDAK harus selalu pneumonia — pertimbangkan berbagai kemungkinan kondisi seperti asma, bronkitis akut, bronkiolitis, tuberkulosis paru (TB), efusi pleura, atelektasis, hiperinflasi paru, atau kondisi lainnya sesuai temuan yang TERLIHAT pada gambar.
+
+Berikan hasil HANYA dalam format JSON murni, tanpa teks atau markdown tambahan:
+{
+  "diagnosisTitle": "Nama diagnosis utama yang paling sesuai gambar",
+  "diagnosis": "Deskripsi lengkap temuan radiologis yang terlihat dan interpretasi klinis",
+  "severity": "Normal | Ringan | Sedang | Perlu Tindakan Segera",
+  "confidence": 85.0,
+  "findings": {
+    "lungField": "Deskripsi lapangan paru kanan dan kiri yang terlihat pada gambar",
+    "heartAndMediastinum": "Deskripsi ukuran jantung, CTR, dan mediastinum yang terlihat",
+    "diaphragmAndSinus": "Deskripsi diafragma dan sinus kostofrenikus yang terlihat",
+    "bones": "Deskripsi tulang skeletal toraks yang terlihat"
+  },
+  "recommendations": "Saran tindakan klinis sesuai diagnosis",
+  "redFlags": ["Tanda bahaya spesifik sesuai kondisi yang didiagnosis"]
+}
+Jawab dalam bahasa Indonesia.`,
+              },
+            ],
+          },
+        ],
       }),
     });
 
@@ -173,11 +164,20 @@ Jawab dalam bahasa Indonesia tanpa markdown pembungkus.`
     }
 
     const rawContent = data.choices?.[0]?.message?.content || '';
-    const result = parseMedicalAiResponse(rawContent);
+    console.log('Groq raw response:', rawContent.slice(0, 300));
 
-    return result;
+    return parseMedicalAiResponse(rawContent);
   } catch (e: any) {
-    console.error('Groq API Error:', e);
-    return parseMedicalAiResponse('');
+    console.error('Groq Vision API Error:', e);
+    return {
+      diagnosisTitle: 'Gagal Menganalisis Gambar',
+      diagnosis: `Terjadi kendala saat menghubungi AI: ${e?.message || 'Koneksi gagal'}.`,
+      severity: 'Sedang',
+      confidence: 0,
+      findings: {},
+      recommendations: 'Pastikan perangkat terhubung ke internet dan ulangi analisis foto rontgen.',
+      redFlags: [],
+    };
   }
 };
+

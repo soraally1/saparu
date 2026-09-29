@@ -80,7 +80,10 @@
         {
           "android": {
             "enableProguardInReleaseBuilds": true,
-            "enableShrinkResourcesInReleaseBuilds": true
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "enableMinifyInReleaseBuilds": true,
+            "useLegacyPackaging": false,
+            "extraProguardRules": "-dontwarn okhttp3.**\n-dontwarn okio.**\n-keep class okhttp3.** { *; }\n-keep class com.facebook.react.** { *; }\n-keep class com.swmansion.reanimated.** { *; }"
           }
         }
       ]
