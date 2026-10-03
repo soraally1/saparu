@@ -20,22 +20,50 @@ const { width } = Dimensions.get('window');
 
 export default function ScanRoentgenResultScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ imageUri?: string; imageBase64?: string }>();
+  const params = useLocalSearchParams<{ imageUri?: string; imageBase64?: string; historyId?: string }>();
   const imageUri = Array.isArray(params.imageUri) ? params.imageUri[0] : params.imageUri;
   const imageBase64Param = Array.isArray(params.imageBase64) ? params.imageBase64[0] : params.imageBase64;
+  const historyId = Array.isArray(params.historyId) ? params.historyId[0] : params.historyId;
 
   const [result, setResult] = useState<RoentgenAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [imageBase64, setImageBase64] = useState<string | null>(imageBase64Param || null);
+  const [displayImageUri, setDisplayImageUri] = useState<string | undefined>(imageUri);
+  const [isFromHistory, setIsFromHistory] = useState(false);
 
   const addHistory = useRoentgenStore((state) => state.addHistory);
+  const history = useRoentgenStore((state) => state.history);
 
   useEffect(() => {
-    if (imageUri) {
+    if (historyId) {
+      // Mode riwayat: ambil data langsung dari store, tanpa panggil AI
+      loadFromHistory(historyId);
+    } else if (imageUri) {
+      // Mode baru: jalankan analisis AI
       loadAndProcess(imageUri);
     }
-  }, [imageUri]);
+  }, [historyId, imageUri]);
+
+  const loadFromHistory = (id: string) => {
+    const item = history.find((h) => h.id === id);
+    if (item) {
+      const storedResult: RoentgenAnalysisResult = {
+        diagnosisTitle: item.diagnosisTitle || 'Analisis Rontgen Dada',
+        diagnosis: item.diagnosis,
+        severity: item.severity || 'Normal',
+        confidence: item.confidence ?? 0,
+        findings: item.findings || {},
+        recommendations: item.recommendations,
+        redFlags: item.redFlags || [],
+      };
+      setResult(storedResult);
+      setDisplayImageUri(item.imageUrl || item.imageBase64 || item.imageUri);
+      setImageBase64(item.imageBase64 || null);
+      setIsFromHistory(true);
+    }
+    setIsLoading(false);
+  };
 
   const loadAndProcess = async (uri: string) => {
     try {
@@ -66,6 +94,7 @@ export default function ScanRoentgenResultScreen() {
       // 2. Jalankan Analisis AI Rontgen Lengkap (Qwen 3.6 27B)
       const data = await analyzeRoentgenImage(uri);
       setResult(data);
+      setDisplayImageUri(uri);
     } catch (e) {
       console.error('Error menganalisis gambar rontgen:', e);
     } finally {
@@ -74,7 +103,7 @@ export default function ScanRoentgenResultScreen() {
   };
 
   const handleSaveAndContinue = async () => {
-    if (result && imageUri && !isSaving) {
+    if (result && (displayImageUri || imageUri) && !isSaving) {
       try {
         setIsSaving(true);
         const today = new Date();
@@ -90,7 +119,7 @@ export default function ScanRoentgenResultScreen() {
         // Simpan ke Zustand & Persistent Storage dengan Base64 image
         await addHistory({
           date: dateString,
-          imageUri: imageUri,
+          imageUri: displayImageUri || imageUri || '',
           imageBase64: imageBase64 || undefined,
           diagnosisTitle: result.diagnosisTitle,
           diagnosis: result.diagnosis,
@@ -155,9 +184,9 @@ export default function ScanRoentgenResultScreen() {
       >
         {/* 1. Gambar Foto Rontgen Terlampir */}
         <View style={styles.imageCard}>
-          {imageBase64 || imageUri ? (
+          {imageBase64 || displayImageUri ? (
             <Image
-              source={{ uri: imageBase64 || imageUri }}
+              source={{ uri: imageBase64 || displayImageUri }}
               style={styles.image}
               contentFit="cover"
               transition={300}
@@ -285,21 +314,23 @@ export default function ScanRoentgenResultScreen() {
           </View>
         )}
 
-        {/* 6. Tombol Simpan & Lanjutkan */}
-        <Pressable
-          style={[styles.saveButton, isSaving && { opacity: 0.7 }]}
-          onPress={handleSaveAndContinue}
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
-          ) : (
-            <>
-              <Feather name="check-circle" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.saveButtonText}>Simpan ke Riwayat Pasien</Text>
-            </>
-          )}
-        </Pressable>
+        {/* 6. Tombol Simpan & Lanjutkan — hanya tampil untuk analisis baru */}
+        {!isFromHistory && (
+          <Pressable
+            style={[styles.saveButton, isSaving && { opacity: 0.7 }]}
+            onPress={handleSaveAndContinue}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <Feather name="check-circle" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.saveButtonText}>Simpan ke Riwayat Pasien</Text>
+              </>
+            )}
+          </Pressable>
+        )}
       </ScrollView>
     </View>
   );

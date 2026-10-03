@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import TermsModal from '@/components/TermsModal';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -41,10 +42,18 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const setAuth = useAuthStore(state => state.setAuth);
+  const [termsVisible, setTermsVisible] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Harap isi email dan password');
+      return;
+    }
+
+    // Tampilkan T&C dulu sebelum proses login
+    if (!termsAccepted) {
+      setTermsVisible(true);
       return;
     }
 
@@ -57,6 +66,32 @@ export default function LoginScreen() {
         await setAuth(token, patient);
 
         // Redirect ke halaman welcome sementara
+        router.replace({ pathname: '/welcome', params: { source: 'login' } });
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || 'Email atau password salah';
+      Alert.alert('Gagal Login', errorMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTermsAgree = () => {
+    setTermsVisible(false);
+    setTermsAccepted(true);
+    // Langsung lanjutkan login setelah setuju
+    setTimeout(() => handleLoginAfterTerms(), 0);
+  };
+
+  const handleLoginAfterTerms = async () => {
+    if (!email || !password) return;
+    setIsLoading(true);
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      if (response.status === 200) {
+        const { token, patient } = response.data;
+        await setAuth(token, patient);
         router.replace({ pathname: '/welcome', params: { source: 'login' } });
       }
     } catch (error: any) {
@@ -213,11 +248,29 @@ export default function LoginScreen() {
                     </Text>
                   </Pressable>
                 </View>
+
+                {/* Terms link */}
+                <Pressable
+                  onPress={() => setTermsVisible(true)}
+                  hitSlop={8}
+                  style={{ marginTop: 4, marginBottom: 4, alignItems: 'center' }}
+                >
+                  <Text style={{ fontFamily: 'FuzzyBubbles-Regular', fontSize: 11, color: '#C07088', textDecorationLine: 'underline', textAlign: 'center' }}>
+                    Syarat &amp; Ketentuan Penggunaan SAPARU
+                  </Text>
+                </Pressable>
               </View>
             </Animated.View>
           )}
         </View>
       </ScrollView>
+
+      {/* Terms Modal */}
+      <TermsModal
+        visible={termsVisible}
+        onClose={() => setTermsVisible(false)}
+        onAgree={handleTermsAgree}
+      />
     </KeyboardAvoidingView>
   );
 }

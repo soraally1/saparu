@@ -3,6 +3,7 @@ import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
+import TermsModal from '@/components/TermsModal';
 import {
   ActivityIndicator,
   Alert,
@@ -42,6 +43,8 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsVisible, setTermsVisible] = useState(false);
 
   useEffect(() => {
     useRegistrationStore.getState().resetRegistration();
@@ -50,6 +53,11 @@ export default function RegisterScreen() {
   const handleRegister = async () => {
     if (!fullName || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Harap isi semua kolom');
+      return;
+    }
+
+    if (!termsAccepted) {
+      Alert.alert('Syarat & Ketentuan', 'Harap setujui Syarat & Ketentuan penggunaan aplikasi terlebih dahulu.');
       return;
     }
 
@@ -225,6 +233,51 @@ export default function RegisterScreen() {
                   </Pressable>
                 </View>
 
+                {/* Terms & Conditions Checkbox */}
+                <Pressable
+                  onPress={() => setTermsVisible(true)}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'flex-start',
+                    gap: 10,
+                    marginBottom: 14,
+                    paddingHorizontal: 2,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: 6,
+                      borderWidth: 2,
+                      borderColor: termsAccepted ? C.btn : C.placeholder,
+                      backgroundColor: termsAccepted ? C.btn : 'transparent',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginTop: 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {termsAccepted && <Feather name="check" size={13} color="white" />}
+                  </View>
+                  <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
+                    <Text style={{ fontFamily: 'FuzzyBubbles-Regular', fontSize: 12, color: C.muted, lineHeight: 18 }}>
+                      Saya telah membaca dan menyetujui
+                    </Text>
+                    <Pressable
+                      onPress={() => setTermsVisible(true)}
+                      hitSlop={6}
+                    >
+                      <Text style={{ fontFamily: 'FuzzyBubbles-Bold', fontSize: 12, color: C.rose, lineHeight: 18, textDecorationLine: 'underline' }}>
+                        Syarat &amp; Ketentuan
+                      </Text>
+                    </Pressable>
+                    <Text style={{ fontFamily: 'FuzzyBubbles-Regular', fontSize: 12, color: C.muted, lineHeight: 18 }}>
+                      penggunaan SAPARU.
+                    </Text>
+                  </View>
+                </Pressable>
+
                 {/* Register Button */}
                 <Pressable
                   className={`w-full items-center mt-[6px] mb-4 ${isLoading ? 'opacity-70' : ''}`}
@@ -262,6 +315,15 @@ export default function RegisterScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Terms Modal */}
+      <TermsModal
+        visible={termsVisible}
+        onClose={() => {
+          setTermsVisible(false);
+          setTermsAccepted(true);
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }

@@ -111,7 +111,7 @@ export default function ScanRoentgenHistoryScreen() {
                   onPress={() =>
                     router.push({
                       pathname: '/scan-roentgen/result',
-                      params: { imageUri: displayImage },
+                      params: { historyId: item.id },
                     })
                   }
                 >
